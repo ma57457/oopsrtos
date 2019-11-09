@@ -6,15 +6,16 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2019/11 | Oopsrtos</title>
+  <title>oops-rtos的实现 | Oopsrtos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="这是一个很小的用于教学的OS">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Oopsrtos">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;archives&#x2F;2019&#x2F;11&#x2F;index.html">
+  <meta name="description" content="1 初识操作系统 1.1 什么是操作系统  1.2 ABI      1.2.1 AAPCS 与 AAPCS64      1.2.2 传参规范与操作系统的关系  1.3 操作系统的优势">
+<meta property="og:type" content="article">
+<meta property="og:title" content="oops-rtos的实现">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0&#x2F;index.html">
 <meta property="og:site_name" content="Oopsrtos">
-<meta property="og:description" content="这是一个很小的用于教学的OS">
+<meta property="og:description" content="1 初识操作系统 1.1 什么是操作系统  1.2 ABI      1.2.1 AAPCS 与 AAPCS64      1.2.2 传参规范与操作系统的关系  1.3 操作系统的优势">
 <meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-11-09T09:29:32.884Z">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
@@ -151,76 +152,266 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
+            <article id="post-oops-rtos的实现" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
   
+    <h1 class="article-title" itemprop="name">
+      oops-rtos的实现
+    </h1>
   
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="archive-article-date">
+
+        
+        <a href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="archive-article-date">
   	<time datetime="2019-11-09T09:23:24.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-09</time>
 </a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/">oops-rtos的实现</a>
-    </h1>
-  
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      <p>1 初识操作系统</p>
+<pre><code>1.1 什么是操作系统
 
-        <div class="article-info info-on-right">
-          
-          
+1.2 ABI
 
+    1.2.1 AAPCS 与 AAPCS64
+
+    1.2.2 传参规范与操作系统的关系
+
+1.3 操作系统的优势</code></pre><a id="more"></a>
+
+<p>2 内核态与用户态的区别</p>
+<pre><code>2.1 权限
+
+2.2 内核态需要做的事情
+
+2.3 用户态需要做的事情
+
+2.2 arm体系结构的运行模式</code></pre><p>3 任务的创建与调度</p>
+<pre><code>3.1 任务态
+
+3.2 任务创建
+
+3.3 任务调度
+
+    3.3.1基于优先级的调度算法
+
+    3.3.2任务就绪表
+
+    3.3.4任务阻塞表
+
+3.4 任务栈与系统栈的区别
+
+3.5 任务优先级
+
+3.6 优先级反转
+
+3.7 空闲任务的作用与创建
+
+3.8 延时函数的作用与实现</code></pre><p>4 锁</p>
+<pre><code>4.1锁的实现方式
+
+    4.1.1 原子操作
+
+    4.1.2 关cpu中断
+
+    4.1.3 关系统调度
+
+4.2锁的作用
+
+    4.2.1 数据保护
+
+    4.2.2 实现信号量
+
+4.3锁的表现形式
+
+    4.3.1 互斥锁
+
+    4.3.2 ……</code></pre><p>5 信号量（和锁有重叠）</p>
+<p>6 临界段</p>
+<pre><code>6.1临界段的作用
+
+6.2临界段的实现</code></pre><p>7 内存管理</p>
+<pre><code>7.1栈和堆的区别
+
+7.2栈是怎么实现的
+
+7.3堆的实现方式
+
+    7.3.1静态数组实现
+
+    7.3.2链表文件定义实现
+
+7.4堆的使用方式
+
+    7.4.1malloc（）的实现
+
+    7.4.2free（）的实现
+
+    7.4.3 内存碎片
+
+        7.4.3.1什么是内存碎片
+
+        7.4.3.2无MMU情况下的内存回收
+
+        7.4.3.3有MMU情况下的内存回收（有时间再写）</code></pre><p>8 中断管理</p>
+<pre><code>8.1 向量中断和非向量中断
+
+8.2 通用中断控制器（NVIC）
+
+8.3 中断嵌套
+
+8.4 中断的上下半部
+
+    8.4.1 中断上下部是什么
+
+    8.4.2 中断上半部与下半部的同步实现
+
+8.5 系统api的中断实现版本</code></pre><p>9 linux上搭建oopsrtos的实践环境</p>
+<pre><code>9.1 交叉编译工具的安装
+
+9.2 简单的Makefile规则
+
+9.3 QEMU环境的安装
+
+9.4 GDB的使用
+
+9.5 打印第一句Hello world.
+
+9.6 多任务的实现</code></pre><p>10 oopsrtos的API表</p>
+<p>附录:</p>
+<pre><code>参考文献表</code></pre>
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" target="_blank" rel="noopener" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" target="_blank" rel="noopener" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" target="_blank" rel="noopener" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;" target="_blank" rel="noopener"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/09/%E7%AE%80%E4%BB%8B/" class="archive-article-date">
-  	<time datetime="2019-11-09T06:16:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-09</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2019/11/09/%E7%AE%80%E4%BB%8B/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">简介</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" target="_blank" rel="noopener" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/09/%E7%AE%80%E4%BB%8B/">简介</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
+  
+
+  
 
 
           </div>
@@ -243,8 +434,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
