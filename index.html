@@ -177,6 +177,7 @@
 <p>*如果代码是裸机跑的话，基本不用看我这篇东西了，打开另外一篇文章，“使能ARM Cortex M4的FPU”，然后直接关闭此页面即可。</p>
 <p>*如果是带操作系统的话，带IDE的我不管，如果是用GCC编译的，请在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存器位赋值，不管我说的那两个宏，我看了其他操作系统（freertos、rtthread、ucos iii）的做法，基本都是要定义这两个宏，操作系统才会在pendsv里面对浮点寄存器入栈。我不打算标新立异，所以，使用oops的时候，请定义这两个宏哈。</p>
 <p>然后，我先讲讲FPU相关的寄存器有哪几个：<br>FPSCR（Floating-point Status and Control Register） 地址是</p>
+<p>……晚上再写，我先去吃饭</p>
 
       
 
