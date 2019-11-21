@@ -174,10 +174,12 @@
     <div class="article-entry" itemprop="articleBody">
       
       <p>这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。</p>
-<p>*如果代码是裸机跑的话，基本不用看我这篇东西了，打开另外一篇文章，“使能ARM Cortex M4的FPU”，然后直接关闭此页面即可。</p>
-<p>*如果是带操作系统的话，带IDE的我不管，如果是用GCC编译的，请在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存器位赋值，不管我说的那两个宏，我看了其他操作系统（freertos、rtthread、ucos iii）的做法，基本都是要定义这两个宏，操作系统才会在pendsv里面对浮点寄存器入栈。我不打算标新立异，所以，使用oops的时候，请定义这两个宏哈。</p>
-<p>然后，我先讲讲FPU相关的寄存器有哪几个：<br>FPSCR（Floating-point Status and Control Register） 地址是</p>
-<p>……晚上再写，我先去吃饭</p>
+<p>*如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存器位赋值，不管我说的那两个宏，我看了其他操作系统（freertos、rtthread、ucos iii）的做法，基本都是要定义这两个宏，操作系统才会在pendsv里面对浮点寄存器入栈。我不打算标新立异，所以，使用oops的时候，请定义这两个宏哈。</p>
+<p>然后，我先讲讲FPU相关的寄存器有哪几个：<br>FPSCR（Floating-point Status and Control Register）,故名思意，这个寄存器是用于控制浮点寄存器和查看浮点寄存器状态的，由于它没有直接映射到内存物理地址，ARM提供了特殊的thumb指令去读取这个寄存器，VMSR（move to floating-point registe from floation-point  system register）和VMRS（move to ARM Core register from floating-point System register）,具体怎么用，呃，看名字猜一下，后面会提到的。</p>
+<p>CPACR（Coprocessor Access Control Register），物理地址是 0xE000ED88。这个寄存器用于控制浮点单元的开启。处理器reset后默认关闭FPU。</p>
+<p>FPCCR（Floating-point Context Control Register），地址0xE000EF34。寄存器用于控制上下文的保存，默认情况下，lazy stacking机制开启。本文会有大篇幅讲解lazy stacking。</p>
+<p>FPCAR（Floating-point Context Address Register），地址0xE000EF38。发生异常后，该寄存器保存了栈用于为浮点寄存器预留的栈帧地址，实际上未发生浮点寄存器入栈，这个是lazy stacking机制，后面会详细解释。</p>
+<p>FPDSCR（Floating-point Default Status Control Register），地址 0xE000EF3C，保存了FPSCR的默认值，？蛤，写到这里我自己懵了，这有啥用，我要默认值在reset后，修改FPSCR之前我自己存下来不好吗？</p>
 
       
 
