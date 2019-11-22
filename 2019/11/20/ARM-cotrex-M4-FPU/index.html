@@ -8,14 +8,14 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>ARM cotrex M4 FPU | Oopsrtos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。 *如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄">
+  <meta name="description" content="这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。 如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ARM cotrex M4 FPU">
 <meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;index.html">
 <meta property="og:site_name" content="Oopsrtos">
-<meta property="og:description" content="这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。 *如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄">
+<meta property="og:description" content="这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。 如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2019-11-21T01:17:29.080Z">
+<meta property="og:updated_time" content="2019-11-22T01:48:07.232Z">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
@@ -173,12 +173,32 @@
     <div class="article-entry" itemprop="articleBody">
       
       <p>这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。</p>
-<p>*如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存器位赋值，不管我说的那两个宏，我看了其他操作系统（freertos、rtthread、ucos iii）的做法，基本都是要定义这两个宏，操作系统才会在pendsv里面对浮点寄存器入栈。我不打算标新立异，所以，使用oops的时候，请定义这两个宏哈。</p>
-<p>然后，我先讲讲FPU相关的寄存器有哪几个：<br>FPSCR（Floating-point Status and Control Register）,故名思意，这个寄存器是用于控制浮点寄存器和查看浮点寄存器状态的，由于它没有直接映射到内存物理地址，ARM提供了特殊的thumb指令去读取这个寄存器，VMSR（move to floating-point registe from floation-point  system register）和VMRS（move to ARM Core register from floating-point System register）,具体怎么用，呃，看名字猜一下，后面会提到的。</p>
-<p>CPACR（Coprocessor Access Control Register），物理地址是 0xE000ED88。这个寄存器用于控制浮点单元的开启。处理器reset后默认关闭FPU。</p>
+<p>如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存器位赋值，不管我说的那两个宏，我看了其他操作系统（freertos、rtthread、ucos iii）的做法，基本都是要定义这两个宏，操作系统才会在pendsv里面对浮点寄存器入栈。我不打算标新立异，所以，使用oops的时候，请定义这两个宏哈。</p>
+<a id="more"></a>
+<h3 id="FPU相关的寄存器"><a href="#FPU相关的寄存器" class="headerlink" title="FPU相关的寄存器"></a>FPU相关的寄存器</h3><p>FPSCR（Floating-point Status and Control Register）,故名思意，这个寄存器是用于控制浮点寄存器和查看浮点寄存器状态的，由于它没有直接映射到内存物理地址，ARM提供了特殊的thumb指令去读取这个寄存器，VMSR（move to floating-point registe from floation-point  system register）和VMRS（move to ARM Core register from floating-point System register）,具体怎么用，呃，看名字猜一下，后面会提到的。</p>
+<p>CPACR（Coprocessor Access Control Register），物理地址是0xE000ED88。这个寄存器用于控制浮点单元的开启。处理器reset后默认关闭FPU。</p>
 <p>FPCCR（Floating-point Context Control Register），地址0xE000EF34。寄存器用于控制上下文的保存，默认情况下，lazy stacking机制开启。本文会有大篇幅讲解lazy stacking。</p>
 <p>FPCAR（Floating-point Context Address Register），地址0xE000EF38。发生异常后，该寄存器保存了栈用于为浮点寄存器预留的栈帧地址，实际上未发生浮点寄存器入栈，这个是lazy stacking机制，后面会详细解释。</p>
 <p>FPDSCR（Floating-point Default Status Control Register），地址 0xE000EF3C，保存了FPSCR的默认值，？蛤，写到这里我自己懵了，这有啥用，我要默认值在reset后，修改FPSCR之前我自己存下来不好吗？</p>
+<p>CONTROL ，Bit2是FPCA的控制寄存器，这个为只有在Cortex-M4F上才有用，由于CONTROL没有映射到物理内存,操作这个寄存器使用MSR和MRS指令。</p>
+<p>异常机制里，我们通过查看EXC_RETURN的Bit4，判断上下文是否使用了浮点寄存器，如果该值为1，表示异常返回上下文未使用浮点寄存器，如果该值为0，说明异常返回上下文使用了浮点寄存器，异常返回上下文包括用户进程上下文、中断上下文。操作系统在配置好相应环境后，可以根据这个位，作为是否需要进行浮点寄存器入栈的依据。</p>
+<h3 id="AAPCS"><a href="#AAPCS" class="headerlink" title="AAPCS"></a>AAPCS</h3><p>AAPCS 的意思是ARM Architecture Procedure Call Standard,提这个主要是解释ARM V7架构的过程调度标准，在涉及到任务调度时，操作系统需要实现现场保护，那么首先要搞清楚，什么是现场，现场的谁需要保护？怎么实现保护。完整的AAPCS不在这里解释，否则就超纲了，只提一点，M4核如果没有开启FPU，那么它和M3的保护机制是一样的，如果开启了，操作系统需要提供更大的栈去保存S0 ~ S31和FPSCR这33个寄存器。下文会具体分析怎么实现浮点相关寄存器的入栈和出栈。</p>
+<h2 id="FPU的使用场景"><a href="#FPU的使用场景" class="headerlink" title="FPU的使用场景"></a>FPU的使用场景</h2><h3 id="没有操作系统的情况"><a href="#没有操作系统的情况" class="headerlink" title="没有操作系统的情况"></a>没有操作系统的情况</h3><p>在没有操作系统的场景下，现场是不需要保护的，不管使用了多少层的中断调用，函数包含了多少级，在这种情况下，浮点寄存器的和整数寄存器的现场保护由硬件提供，这个外设称为NVIC，全称是嵌入式中断控制器，它会在进入中断的时候，自行将R0 ~ R3 ，R13 ~ R15和S0 ~ S15和FPSCR入栈，RESET后的栈默认为MSP。硬件自动判定是否保存浮点寄存器，用户无需关心相关事情。</p>
+<h3 id="有操作系统的情况"><a href="#有操作系统的情况" class="headerlink" title="有操作系统的情况"></a>有操作系统的情况</h3><p>带操作系统的时候，对浮点寄存器的处理，有两种处理方式，一种是全保存，一种lazy stacking。</p>
+<h4 id="全保存"><a href="#全保存" class="headerlink" title="全保存"></a>全保存</h4><p>这种方式简单直接，就是只要开启了浮点单元，在上下文切换函数里面，浮点寄存器直接入栈和出栈，不管上下文是否使用了浮点寄存器。</p>
+<h4 id="lazy-stacking"><a href="#lazy-stacking" class="headerlink" title="lazy stacking"></a>lazy stacking</h4><p>这种方式实现起来比较复杂，分两种情况讨论，一种是中断中不使用浮点寄存器，一种是中断中使用浮点寄存器。</p>
+<p>现在先解释一下什么是lazy stacking，lazy stacking机制在cortex M4里面主要是给操作系统处理FPU提供的，意思就是在异常发生的时候，浮点寄存器不入栈，这里的浮点寄存器指的是S0 ~ S15，FPSCR这几个NVIC控制的寄存器，但是会在相关的栈里面保留等长的内存空间，FPCAR自动指向保存相关的浮点栈的地址，注意这个寄存器不会因为栈切换而修改地址，它是硬件自动赋值的。直到操作系统进行了S16 ~ S31的入栈处理，在真正的S16 ~ S31的入栈处理发生前，硬件自动将S0 ~ S15入栈。ARM提供这个机制原因是希望减少中断等待和上下文切换时间。感觉有点象linux 内存分配，就是等待用户真的往请求的内存里面写东西的时候才分配内存。</p>
+<h5 id="中断中不使用浮点寄存器"><a href="#中断中不使用浮点寄存器" class="headerlink" title="中断中不使用浮点寄存器"></a>中断中不使用浮点寄存器</h5><p>bilibili ……</p>
+<h5 id="中断中使用浮点寄存器"><a href="#中断中使用浮点寄存器" class="headerlink" title="中断中使用浮点寄存器"></a>中断中使用浮点寄存器</h5><p>bilibili ……</p>
+<h2 id="FPU使用实践"><a href="#FPU使用实践" class="headerlink" title="FPU使用实践"></a>FPU使用实践</h2><p>本文只提供操作系统环境下的在中断中使用浮点运算的实践，并且开启了lazy stacking。</p>
+<h3 id="FPU实践使用的环境"><a href="#FPU实践使用的环境" class="headerlink" title="FPU实践使用的环境"></a>FPU实践使用的环境</h3><ul>
+<li>debian 9</li>
+<li>emacs26.1</li>
+<li>qemu （stm32f429 discovery）</li>
+<li>stm32f407（硬件板子）</li>
+<li>oops-rtos</li>
+</ul>
+<p>bilibili……我还没写哈</p>
 
       
 
