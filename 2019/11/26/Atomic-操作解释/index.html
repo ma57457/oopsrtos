@@ -6,16 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2019 | Oopsrtos</title>
+  <title>Atomic 操作解释 | Oopsrtos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="这是一个很小的用于教学的OS">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Oopsrtos">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;archives&#x2F;2019&#x2F;index.html">
+  <meta name="description" content="目录1 什么是原子操作？2 为什么我们需要原子操作？3 流水线4 什么是数据冒险？5 什么是控制冒险？6 多级流水线的影响。7 乱续8 屏障9 怎么实现原子操作？10 SWP和SWPB指令.11 ARM V6及以后 的LDREX STREX 指令.12 linux kernel如何实现原子操作">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Atomic 操作解释">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;26&#x2F;Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A&#x2F;index.html">
 <meta property="og:site_name" content="Oopsrtos">
-<meta property="og:description" content="这是一个很小的用于教学的OS">
+<meta property="og:description" content="目录1 什么是原子操作？2 为什么我们需要原子操作？3 流水线4 什么是数据冒险？5 什么是控制冒险？6 多级流水线的影响。7 乱续8 屏障9 怎么实现原子操作？10 SWP和SWPB指令.11 ARM V6及以后 的LDREX STREX 指令.12 linux kernel如何实现原子操作">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;source&#x2F;images&#x2F;Fivestagespipeline.png">
+<meta property="og:updated_time" content="2019-11-26T03:48:13.682Z">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;source&#x2F;images&#x2F;Fivestagespipeline.png">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
   
@@ -151,233 +154,194 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
+            <article id="post-Atomic-操作解释" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
   
+    <h1 class="article-title" itemprop="name">
+      Atomic 操作解释
+    </h1>
   
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/" class="archive-article-date">
+
+        
+        <a href="/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/" class="archive-article-date">
   	<time datetime="2019-11-26T03:29:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
 </a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/">Atomic 操作解释</a>
-    </h1>
-  
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      <p>目录<br>1 什么是原子操作？<br>2 为什么我们需要原子操作？<br>3 流水线<br>4 什么是数据冒险？<br>5 什么是控制冒险？<br>6 多级流水线的影响。<br>7 乱续<br>8 屏障<br>9 怎么实现原子操作？<br>10 SWP和SWPB指令.<br>11 ARM V6及以后 的LDREX STREX 指令.<br>12 linux kernel如何实现原子操作</p>
+<a id="more"></a>
+<p>1 什么是原子操作？<br>我相信点开这个页面的读者关于原子操作或多或少都应该有一点点了解了，在学编程的时候或者是老师、或者是同学之类的人物可能有提到过原子操作这件事情。比如，在写C语言代码的时候，添加volatile 这个语句可以避免变量被优化，不让编译器将这个变量装到寄存器中，直接读取物理内存。但是，我不知道，为什么这个C语言的关键字被以讹传讹的说成可以实现原子操作（见《程序员的自我修养——编译 装载 链接》线程安全一节。<br>本文先给原子操作下一个定义，原子操作的意思就是一条赋值语句，在语句执行完毕 之前，变量的赋值操作不会被打断。</p>
+<p>举个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">thread A thread B</span><br><span class="line">b = 100； c = 20；</span><br><span class="line">a = b； a = c；</span><br></pre></td></tr></table></figure>
+<p>上面的语句中，线程A的变量a等于b，线程B的变量a等于c。<br>但实际情况可能会变成线程A的a=b语句；执行完毕后a = c；</p>
+<p>这个时候我们可以改为；</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">thread A thread B</span><br><span class="line">b = 100； c = 20；</span><br><span class="line">atomic_op(a,b)； atomic_op(a,c)；</span><br></pre></td></tr></table></figure>
+<p>调用这个函数强制变量a的赋值正确。这个调用其实使用方法也是错误的，读者将这段代码看作伪代码即可。</p>
+<p>2 为什么我们需要原子操作？<br>原子操作其实是在2004年以后提得比较多，主要原因是那一年多核cpu开始流行，多线程并发的竞争更严重。在多核系统起来前，原子操作也有提到，但是实现方法比较粗暴，直接关CPU中断了事，因为单核的cpu，直接关中断等于禁止线程调度，不响应硬件中断需求。所以没有变量会被修改的现象。</p>
+<p>3 流水线<br>接下来解释一下流水线和内存变量赋值的关系，以及什么是数据、控制竞争。<br>1985年以后，大部分的处理器都采用了流水线来进行指令重叠来提高性能（有个特特例是8051仍然采用状态机）。本质上讲，流水线的指令重叠指的是时间上重叠。<br>以misp为例，misp执行一条指令需要执行5个操作，分别为，取指、译码、执行、访存、回写。</p>
+<p><img src="/source/images/Fivestagespipeline.png" alt="5级流水线"><br>（图片来源wiki）</p>
+<p>流水线CPU=理想流水线CPI+结构化停顿+数据冒险停顿+控制停顿</p>
+<p>4 什么是数据冒险</p>
+<p>（参考《计算机体系结构 量化研究方法》）<br>上面的图片中，如箭头，每一条指令都依赖与上一条指令，这就是数据相关代码，为了保证指令的正确执行，必须等待上一条指令回写内存之后，下一条指令才能执行。同时执行这条指令会导致流水线互锁，如果流水线深度大于指令间间隔，指令前置等旁路技术无法解决问题的时候，cpu需要停顿。否则指令执行会发生错误。<br>当指令间存在名称相关，并且两条指令间很接近，那么执行期间的重叠改变对相关操作数的访问顺序，冒险就存在。</p>
+<p>5 什么是控制冒险</p>
+<p>（图片来自计算机体系结构：量化研究方法）<br>如图中，如果不管R2的数据，就有可能改变程序的结果。就是说我们得等待R2的正确结果回写内存后，才能知道是否需要跳转。最简单的解决办法是停顿，直到R2结果出来，然后执行跳转或不跳转。但是这会导致cpu性能削弱，达不到流水线技术本来的目的。cpu设计人员希望能够忽略数据相关，直接载入指令，这时候会考虑分支预测，这讨论太深入，本文不是为了解释流水线技术的，我会写另一篇博文用更通俗的语言详细解释流水线，这里只是简单介绍。</p>
+<p>6 多级流水线的影响</p>
+<p>多级流水线导致了指令执行期间有可能会被操作系统打断，一个指令在取指之后数据保存在cache中，然后其他线程也对这个指令操作，并且到了执行阶段。那么数据的写入就不是原子的，数据操作被打断的可能性存在于中断和多线程，由于多线程或中断导致了数据的写入是错乱的。</p>
+<p>现在回到我们之前的例子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">thread A thread B</span><br><span class="line">b = 100； c = 20；</span><br><span class="line">a = b； a = c；</span><br></pre></td></tr></table></figure>
+<p>现在可以解释为什么“实际情况可能会变成线程A的a=b语句；执行完毕后a = c；”<br>在线程A对a取指后，线程B已经在对“a=c”这条指令执行回写操作了，导致线程A的数据错乱。（解释基于misp的5级流水线）。</p>
+<p>如果流水线的层级比较低，冒险的情况会减少很多，举个例子，ARM-V7-M的cpu只有3级流水线，数据冒险的情况低很多，官方文档（barry）中关于屏障的解释是这样的。<br>大部分的数据屏障和指令屏障都是没有必要的，只有基于NVIC对中断控制的时候才是有必要的。所以我的m-rtos暂时没有写屏障接口。</p>
+<p>7 乱续<br>前文已经解释了多级流水线对于多线程数据操作带来错乱的影响，现在解释另外一种会影响数据操作的情况。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">a = 1；</span><br><span class="line">b = 2；</span><br><span class="line">c = 3；</span><br><span class="line">//真实的结果有可能会变成，</span><br><span class="line">a = 1；</span><br><span class="line">c = 3；</span><br><span class="line">b = 2；</span><br></pre></td></tr></table></figure>
+<p>上面的代码中，a,b,c的赋值都是对的，但是执行的顺序可能和我们希望的不同。这就是乱序。<br>乱续有两种，一种是编译乱续，一种是cpu乱续，cpu或者编译器为了减少数据冒险中带来的停顿影响，会自行根据指令相关或命名相关，对指令进行重新排序，目的是减少cpu的停顿。从结果看，数据的操作是没有影响，但是如果在进行cpu外设或者外部芯片初始化的话，这可能会使得外设初始化失败。</p>
+<p>8 屏障<br>屏障是为了使cpu执行指令或者编译器编译代码过程中不对代码排序优化的约束指令。使用上来看也是指令。但是它保证了程序的执行会按照源码的序列执行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Data Memory Barrier (DMB)</span><br><span class="line">Data Synchronization Barrier (DSB)</span><br><span class="line">Instruction Synchronization Barrier (ISB)</span><br></pre></td></tr></table></figure>
+<p>9 如何实现原子操作<br>最简单的原子操作实现就是关总中断，中断关闭，操作系统和中断都无法打断指令的执行，也就没有数据错乱的情况。（早期的linux的大内核锁就是这么简单粗暴）</p>
+<p>10 SWP和SWPB指令<br>现在聊聊关于ARM V6 以前是怎么实现原子操作的，SWP和SWPB指令。下面是arm官方关于这个指令的解释。我说说人话（吃独食），其实就是直接关闭内存总线，然后数据写入结束，恢复总线。在单核时代当然无所谓啊，但是到了2004年以后，SMP时代就不好办，系统不光一个cpu啊，不能一个cpu为了写个数据，别人就不能操作内存了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">Syntax</span><br><span class="line">SWP&#123;B&#125;&#123;cond&#125; Rt, Rt2, [Rn]</span><br><span class="line">where:</span><br><span class="line">cond</span><br><span class="line">is an optional condition code.</span><br><span class="line">B</span><br><span class="line">is an optional suffix. If B is present, a byte is swapped. Otherwise, a 32-bit word is swapped.</span><br><span class="line">Rt</span><br><span class="line">is the destination register. Rt must not be PC.</span><br><span class="line">Rt2</span><br><span class="line">is the source register. Rt2 can be the same register as Rt. Rt2 must not be PC.</span><br><span class="line">Rn</span><br><span class="line">contains the address in memory. Rn must be a different register from both Rt and Rt2. Rn must not be PC.</span><br><span class="line">Usage</span><br><span class="line">You can use SWP and SWPB to implement semaphores:</span><br><span class="line">Data from memory is loaded into Rt.</span><br><span class="line">The contents of Rt2 are saved to memory.</span><br><span class="line">If Rt2 is the same register as Rt, the contents of the register are swapped with the contents of the memory location.</span><br><span class="line">Note</span><br><span class="line">The use of SWP and SWPB is deprecated in ARMv6 and above. You can use LDREX and STREX instructions to implement more sophisticated semaphores in ARMv6 and above.</span><br></pre></td></tr></table></figure>
+<p>（来源于arm developer网站）</p>
+<p>11 ARM V6及以后 的LDREX STREX 指令</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"> MOV r1, #0x1                ; load the ‘lock taken’ value</span><br><span class="line">try</span><br><span class="line">    LDREX r0, [LockAddr]        ; load the lock value</span><br><span class="line">    CMP r0, #0                  ; is the lock free?</span><br><span class="line">    STREXEQ r0, r1, [LockAddr]  ; try and claim the lock</span><br><span class="line">    CMPEQ r0, #0                ; did this succeed?</span><br><span class="line">    BNE try                     ; no – try again</span><br><span class="line">    ....                        ; yes – we have the lock</span><br></pre></td></tr></table></figure>
+<p>（来源于arm developer网站）<br>LDREX 指令是载入内存数据到一个寄存器中，然后给这个内存打戳，然后比对这个戳还在不在，如果在说明指令数据没有被其他线程或中断变更，如果不在了，说明其他人动了这个寄存器，就是数据已经变更了，那么再执行一次LDREX，再打一个戳。当检测对了之后，调用STREX 写入数据，并将戳去除。这里并没有锁上内存总线，而且其他cpu也可继续工作。</p>
+<p>12 linux kernel如何实现原子操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * ARMv6 UP and SMP safe atomic ops.  We use load exclusive and</span><br><span class="line"> * store exclusive to ensure that these are atomic.  We may loop</span><br><span class="line"> * to ensure that the update happens.</span><br><span class="line"> */</span><br><span class="line"></span><br><span class="line">#define ATOMIC_OP(op, c_op, asm_op)                 \</span><br><span class="line">static inline void atomic_##op(int i, atomic_t *v)          \</span><br><span class="line">&#123;                                   \</span><br><span class="line">    unsigned long tmp;                      \</span><br><span class="line">    int result;                         \</span><br><span class="line">                                    \</span><br><span class="line">    prefetchw(&amp;v-&gt;counter);                     \</span><br><span class="line">    __asm__ __volatile__(&quot;@ atomic_&quot; #op &quot;\n&quot;           \</span><br><span class="line">&quot;1: ldrex   %0, [%3]\n&quot;                     \</span><br><span class="line">&quot;   &quot; #asm_op &quot; %0, %0, %4\n&quot;                   \</span><br><span class="line">&quot;   strex   %1, %0, [%3]\n&quot;                     \</span><br><span class="line">&quot;   teq %1, #0\n&quot;                       \</span><br><span class="line">&quot;   bne 1b&quot;                         \</span><br><span class="line">    : &quot;=&amp;r&quot; (result), &quot;=&amp;r&quot; (tmp), &quot;+Qo&quot; (v-&gt;counter)       \</span><br><span class="line">    : &quot;r&quot; (&amp;v-&gt;counter), &quot;Ir&quot; (i)                   \</span><br><span class="line">    : &quot;cc&quot;);                            \</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-        <div class="article-info info-on-right">
-          
-          
+<p>上面的代码是linux kernel 5.16 里的，linux-5.1.16/arch/arm/include/asm/atomic.h ，这里实现的是将一个变量根据操作赋值成需要的变量。<br>然后linux kernel利用这个原子操作实现其他的类似互斥锁、自旋锁、序列锁之类复杂的锁。<br>这里不深入解释linux锁的机制，超出本文讨论的范围了。</p>
 
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" target="_blank" rel="noopener" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" target="_blank" rel="noopener" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" target="_blank" rel="noopener" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;" target="_blank" rel="noopener"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/%E5%BB%BA%E7%AB%8Boopsrtos-linux%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" class="archive-article-date">
-  	<time datetime="2019-11-25T23:25:46.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2019/11/26/%E5%BB%BA%E7%AB%8Boopsrtos-linux%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">建立oopsrtos linux开发环境</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" target="_blank" rel="noopener" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/%E5%BB%BA%E7%AB%8Boopsrtos-linux%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">建立oopsrtos linux开发环境</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/25/oops-rtos-release-V1-0-0/" class="archive-article-date">
-  	<time datetime="2019-11-24T23:55:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-25</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/25/oops-rtos-release-V1-0-0/">oops-rtos release V1.0.0</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/20/ARM-cotrex-M4-FPU/" class="archive-article-date">
-  	<time datetime="2019-11-20T04:01:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-20</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/20/ARM-cotrex-M4-FPU/">ARM cotrex M4 FPU</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/" class="archive-article-date">
-  	<time datetime="2019-11-18T00:09:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-18</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/">使能ARM Cortex M4的FPU</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" target="_blank" rel="noopener" class="js-tag article-tag-list-link color2">ARM OS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/ARM//" class="article-tag-list-link color4">ARM</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="archive-article-date">
-  	<time datetime="2019-11-09T09:23:24.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-09</time>
-</a>
-        </div>
-    	 
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/">oops-rtos的实现</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/09/%E7%AE%80%E4%BB%8B/" class="archive-article-date">
-  	<time datetime="2019-11-09T06:16:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-09</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/09/%E7%AE%80%E4%BB%8B/">简介</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
+  
 
 
           </div>
@@ -400,8 +364,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
