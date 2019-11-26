@@ -6,16 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2019/11 | Oopsrtos</title>
+  <title>zephyr 系统启动分析（一） | Oopsrtos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="这是一个很小的用于教学的OS">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Oopsrtos">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;archives&#x2F;2019&#x2F;11&#x2F;index.html">
+  <meta name="description" content="以stm32f405芯片为例进行启动分析。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="zephyr 系统启动分析（一）">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;26&#x2F;zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89&#x2F;index.html">
 <meta property="og:site_name" content="Oopsrtos">
-<meta property="og:description" content="这是一个很小的用于教学的OS">
+<meta property="og:description" content="以stm32f405芯片为例进行启动分析。">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;26&#x2F;zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89&#x2F;image1.jpg">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;26&#x2F;zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89&#x2F;image2.jpg">
+<meta property="og:updated_time" content="2019-11-26T06:13:53.851Z">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;26&#x2F;zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89&#x2F;image1.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
   
@@ -151,317 +155,212 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
+            <article id="post-zephyr-系统启动分析（一）" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
   
+    <h1 class="article-title" itemprop="name">
+      zephyr 系统启动分析（一）
+    </h1>
   
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/" class="archive-article-date">
+
+        
+        <a href="/2019/11/26/zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/" class="archive-article-date">
   	<time datetime="2019-11-26T04:13:17.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
 </a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/">zephyr 系统启动分析（一）</a>
-    </h1>
-  
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      <p>以stm32f405芯片为例进行启动分析。</p>
+<a id="more"></a>
+<p>zephyr 启动时执行的第一条指令是reset.s这个文件中的第69行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#if defined(CONFIG_ARMV6_M_ARMV8_M_BASELINE)</span><br><span class="line">cpsid i</span><br><span class="line">#elif defined(CONFIG_ARMV7_M_ARMV8_M_MAINLINE)</span><br><span class="line">movs.n r0, #_EXC_IRQ_DEFAULT_PRIO</span><br><span class="line">msr BASEPRI, r0</span><br></pre></td></tr></table></figure>
+<p>第一行代码是movs.n r0,#_EXC_IRQ_DEFAULT_PRIO 这行代码是一个将立即数直接存储到r0寄存器中，然后接下来一行是将r0中数据放到BASEPRI中，这两行代码的目的是将basepri以上的中断屏蔽。接下来是执行91~111行代码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">* Set PSP and use it to boot without using MSP, so that it</span><br><span class="line">* gets set to _interrupt_stack during initialization.</span><br><span class="line">*/</span><br><span class="line">ldr r0, =_interrupt_stack</span><br><span class="line">ldr r1, =CONFIG_ISR_STACK_SIZE</span><br><span class="line">adds r0, r0, r1</span><br><span class="line">msr PSP, r0</span><br><span class="line">mrs r0, CONTROL</span><br><span class="line">movs r1, #2</span><br><span class="line">orrs r0, r1 /* CONTROL_SPSEL_Msk */</span><br><span class="line">msr CONTROL, r0</span><br><span class="line">/*</span><br><span class="line">* When changing the stack pointer, software must use an ISB instruction</span><br><span class="line">* immediately after the MSR instruction. This ensures that instructions</span><br><span class="line">* after the ISB instruction execute using the new stack pointer.</span><br><span class="line">*/</span><br><span class="line">isb</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line">* ‘bl’ jumps the furthest of the branch instructions that are</span><br><span class="line">* supported on all platforms. So it is used when jumping to _PrepC</span><br><span class="line">* (even though we do not intend to return).</span><br><span class="line">*/</span><br><span class="line">bl _PrepC</span><br></pre></td></tr></table></figure>
+<p>目的是修改sp指针，修改指针的原因是armv7-m架构的芯片reset后或者直接冷启动的时候默认使用msp指针，修改为ssp指针是为了区分内核态和用户态，m-rtos（以下简称m）的指针修改时机和zephyr不同，m是在执行完毕在任务跳转前才将sp指针切换的。这两种方式的优劣我还没有很清晰的概念，后续我会继续查查相关文档。</p>
+<p>关于这段代码有一个可以聊聊的是isb这个指令，isb的全程是Instruction synchronization Barrier，指令同步屏障的意思，它指的是必须等待前面的指令执行完毕之后才执行后续的指令。</p>
+<p>指令同步屏障可刷新处理器中的流水线，以便在 ISB 指令完成后，才从高速缓存或内存中提取位于该指令后的所有其他指令。 这可确保提取时间晚于 ISB 指令的指令能够检测到 ISB 指令执行前就已经执行的上下文更改操作的执行效果。</p>
+<p>此外，ISB 指令可确保程序中位于其后的所有跳转指令总会被写入跳转预测逻辑，其写入上下文可确保 ISB 指令后的指令均可检测到这些跳转指令。 这是指令流能够正确执行的前提条件。</p>
+<p>ps：简单介绍一下armv7-m的模式切换，armv7-m是精简版的armv7架构，它只有两种模式，和完整的armv7架构区别有点大，并且没有GIC（通用中断控制器）。异常触发的时候，armv7-m通过nvic这个外设将r0<del>r3,R12</del>R15和cpsr寄存器的数据内容送入到当前sp指针指向的栈中。就是说它的中断管理和完整版的armv7有区别，但是基本的cpsr寄存器还在，仍然可以通过对I位置位来屏蔽cpu的中断响应。但是缺失了预取指中止、数据中止、未定义指令、fiq等异常。</p>
+<p>最后的bl指令跳转到_PrepC中，GDB跟踪代码执行的结果是跳转到了prep_c.c文件的_PrepC()函数中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">void _PrepC(void)</span><br><span class="line">&#123;</span><br><span class="line">relocate_vector_table();</span><br><span class="line">enable_floating_point();</span><br><span class="line">z_bss_zero();</span><br><span class="line">z_data_copy();</span><br><span class="line">#ifdef CONFIG_BOOT_TIME_MEASUREMENT</span><br><span class="line">__start_time_stamp = 0U;</span><br><span class="line">#endif</span><br><span class="line">z_IntLibInit();</span><br><span class="line">z_cstart();</span><br><span class="line">CODE_UNREACHABLE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后执行relocate_vector_table()函数中，我们看看gdb单步跟踪下来的结果。</p>
+<p>现在分析一下relocate_vector_table()这个函数干了什么事情。<br><img src="/2019/11/26/zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/image1.jpg" alt><br>截图中可以看到，中断向量重定向，然后执行了两句屏障指令，DSB指令是数据屏障指令（Data synchronization Barrier）。然后下面是官方对这个指令的介绍。<br><img src="/2019/11/26/zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/image2.jpg" alt><br>数据同步屏障是一种特殊的内存屏障。 只有当此指令执行完毕后，才会执行程序中位于此指令后的指令。 当满足以下条件时，此指令才会完成：</p>
+<ul>
+<li>位于此指令前的所有显式内存访问均完成。</li>
+<li>位于此指令前的所有高速缓存、跳转预测和 TLB 维护操作全部完成。</li>
+</ul>
+<p>PS：中断向量表重定向：中断属于异常的一种，arm v7-m中定义了中断的默认地址，在0x8000004这个地址中取中断向量的首地址，如果使用readelf查看的话，我们可以看到这个地址指向的就是Reset_handle()这个地址，即中断向量表首地址。在bin文件中则为第二个字的地址。armv7-m同时定义了一个中断向量地址存储寄存器，就是说中断的默认地址是可以修改的。修改的动机一般为添加了软件在线升级的功能。（这段话感觉描述得有点不清晰，我再斟酌一下措辞，备注）</p>
+<p>_PrepC()函数的下一行代码是使能浮点单元，浮点单元的启动需要一个宏“CONFIG_FLOAT”，这个宏我们可以在*.dts文件中定义，也可以在gcc编译过程中指定-D参数，最好别在源码中定义，因为这会污染源码，如果哪天将git仓库update了一下，可能会将修改的东西覆盖。然后硬件浮点数使能函数我就不展开讲了，这个函数是可以不执行的。</p>
+<p>然后是z_bss_zero();这个函数，从字面上看就是bss段清零，然后我贴一下代码。源码路径是kernel/init.c,153行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">*</span><br><span class="line">* @brief Clear BSS</span><br><span class="line">*</span><br><span class="line">* This routine clears the BSS region, so all bytes are 0.</span><br><span class="line">*</span><br><span class="line">* @return N/A</span><br><span class="line">*/</span><br><span class="line">void z_bss_zero(void)</span><br><span class="line">&#123;</span><br><span class="line">(void)memset(__bss_start, 0, __bss_end – __bss_start);</span><br><span class="line">#ifdef DT_CCM_BASE_ADDRESS</span><br><span class="line">(void)memset(&amp;__ccm_bss_start, 0,</span><br><span class="line">((u32_t) &amp;__ccm_bss_end – (u32_t) &amp;__ccm_bss_start));</span><br><span class="line">#endif</span><br><span class="line">#ifdef DT_DTCM_BASE_ADDRESS</span><br><span class="line">(void)memset(&amp;__dtcm_bss_start, 0,</span><br><span class="line">((u32_t) &amp;__dtcm_bss_end – (u32_t) &amp;__dtcm_bss_start));</span><br><span class="line">#endif</span><br><span class="line">#ifdef CONFIG_CODE_DATA_RELOCATION</span><br><span class="line">extern void bss_zeroing_relocation(void);</span><br><span class="line"></span><br><span class="line">bss_zeroing_relocation();</span><br><span class="line">#endif /* CONFIG_CODE_DATA_RELOCATION */</span><br><span class="line">#ifdef CONFIG_COVERAGE_GCOV</span><br><span class="line">(void)memset(&amp;__gcov_bss_start, 0,</span><br><span class="line">((u32_t) &amp;__gcov_bss_end – (u32_t) &amp;__gcov_bss_start));</span><br><span class="line">#endif</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以看到bss段的清零操作使用的是c语言实现，如果是直接是使用st官方的启动文件，bss段的清零操作是用汇编实现的，使用C的好初显而易见，移植方便，所以zephyr直接把它放到了kernel目录下，然后这个函数也很好理解，就是将bss段的段起始地址和结束地址之间的内存清零。</p>
+<p>这个函数值得一提的是在__bss_start, __bss_end 这两个参数是在lds文件中的定义的段地址，在源码中是找不到定义的，因为没有人知道它最终地址是多少，关于连接文件本文暂不涉及，后续我会直接写个新的博文去介绍关于elf文件的链接。</p>
+<p>然后是z_data_copy();这个函数，从字面上看就是数据段的复制，然后我贴一下代码。源码路径是kernel/init.c,187行。<br>#ifdef CONFIG_XIP<br>/**<br> *</p>
+<ul>
+<li><p>@brief Copy the data section from ROM to RAM</p>
+</li>
+<li></li>
+<li><p>This routine copies the data section from ROM to RAM.</p>
+</li>
+<li></li>
+<li><p>@return N/A</p>
+</li>
+<li><p>/<br>void z_data_copy(void)<br>{<br>  (void)memcpy(&amp;<strong>data_ram_start, &amp;</strong>data_rom_start,</p>
+<pre><code>__data_ram_end - __data_ram_start);</code></pre><p>#ifdef CONFIG_ARCH_HAS_RAMFUNC_SUPPORT<br>  (void)memcpy(&amp;_ramfunc_ram_start, &amp;_ramfunc_rom_start,</p>
+<pre><code>(uintptr_t) &amp;_ramfunc_ram_size);</code></pre><p>#endif /* CONFIG_ARCH_HAS_RAMFUNC_SUPPORT */<br>#ifdef DT_CCM_BASE_ADDRESS<br>  (void)memcpy(&amp;<strong>ccm_data_start, &amp;</strong>ccm_data_rom_start,</p>
+<pre><code>__ccm_data_end - __ccm_data_start);</code></pre><p>#endif<br>#ifdef DT_DTCM_BASE_ADDRESS<br>  (void)memcpy(&amp;<strong>dtcm_data_start, &amp;</strong>dtcm_data_rom_start,</p>
+<pre><code>__dtcm_data_end - __dtcm_data_start);</code></pre><p>#endif<br>#ifdef CONFIG_CODE_DATA_RELOCATION<br>  extern void data_copy_xip_relocation(void);</p>
+<p>  data_copy_xip_relocation();<br>#endif  /* CONFIG_CODE_DATA_RELOCATION <em>/<br>#ifdef CONFIG_USERSPACE<br>#ifdef CONFIG_STACK_CANARIES<br>  /</em> stack canary checking is active for all C functions.</p>
+<ul>
+<li><p>__stack_chk_guard is some uninitialized value living in the</p>
+</li>
+<li><p>app shared memory sections. Preserve it, and don’t make any</p>
+</li>
+<li><p>function calls to perform the memory copy. The true canary</p>
+</li>
+<li><p>value gets set later in z_cstart().</p>
+</li>
+<li><p>/<br>uintptr_t guard_copy = __stack_chk_guard;<br>u8_t *src = (u8_t *)&amp;_app_smem_rom_start;<br>u8_t *dst = (u8_t *)&amp;_app_smem_start;<br>u32_t count = _app_smem_end - _app_smem_start;</p>
+<p>guard_copy = __stack_chk_guard;<br>while (count &gt; 0) {<br>  <em>(dst++) = *(src++);<br>  count–;<br>}<br>__stack_chk_guard = guard_copy;<br>#else<br>(void)memcpy(&amp;_app_smem_start, &amp;_app_smem_rom_start,<br>   _app_smem_end - _app_smem_start);<br>#endif /</em> CONFIG_STACK_CANARIES <em>/<br>#endif /</em> CONFIG_USERSPACE <em>/<br>}<br>#endif /</em> CONFIG_XIP */</p>
+<pre><code></code></pre></li>
+</ul>
+</li>
+</ul>
+<p>从注释来看，这是将数据段从rom中复制到ram中。这部份的知识涉及到了文件装载的问题，从这里看得出来，zephyr比我的m-rtos要复杂很多。</p>
+<p>由于涉及的东西有点多，博主又希望能说得清楚一点，暂时将这个博文定为一，后续会慢慢更新的，对操作系统有兴趣的读者可以和我联系，联系方式为 <a href="mailto:oopsmartin@protonmail.com" target="_blank" rel="noopener">oopsmartin@protonmail.com</a>。</p>
 
-        <div class="article-info info-on-right">
-          
-          
+      
 
+      
+        <div class="page-reward">
+          <a href="javascript:;" target="_blank" rel="noopener" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" target="_blank" rel="noopener" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" target="_blank" rel="noopener" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" target="_blank" rel="noopener" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;" target="_blank" rel="noopener"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/11/26/zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/%E6%88%91%E8%BF%99%E5%A4%A7%E5%AD%A6%E5%9B%9B%E5%B9%B4/" class="archive-article-date">
-  	<time datetime="2019-11-26T04:11:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2019/11/26/%E6%88%91%E8%BF%99%E5%A4%A7%E5%AD%A6%E5%9B%9B%E5%B9%B4/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">我这大学四年</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" target="_blank" rel="noopener" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/%E6%88%91%E8%BF%99%E5%A4%A7%E5%AD%A6%E5%9B%9B%E5%B9%B4/">我这大学四年</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/%E3%80%8A%E8%8F%8A%E4%B8%8E%E5%88%80%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/" class="archive-article-date">
-  	<time datetime="2019-11-26T04:09:02.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/%E3%80%8A%E8%8F%8A%E4%B8%8E%E5%88%80%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/">《菊与刀》读后感</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/%E3%80%8A%E8%81%8A%E8%81%8A%E6%9E%B6%E6%9E%84%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/" class="archive-article-date">
-  	<time datetime="2019-11-26T03:58:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/%E3%80%8A%E8%81%8A%E8%81%8A%E6%9E%B6%E6%9E%84%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/">《聊聊架构》读后感</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/" class="archive-article-date">
-  	<time datetime="2019-11-26T03:29:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/">Atomic 操作解释</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/%E5%BB%BA%E7%AB%8Boopsrtos-linux%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" class="archive-article-date">
-  	<time datetime="2019-11-25T23:25:46.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/%E5%BB%BA%E7%AB%8Boopsrtos-linux%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">建立oopsrtos linux开发环境</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/25/oops-rtos-release-V1-0-0/" class="archive-article-date">
-  	<time datetime="2019-11-24T23:55:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-25</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/25/oops-rtos-release-V1-0-0/">oops-rtos release V1.0.0</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/20/ARM-cotrex-M4-FPU/" class="archive-article-date">
-  	<time datetime="2019-11-20T04:01:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-20</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/20/ARM-cotrex-M4-FPU/">ARM cotrex M4 FPU</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/" class="archive-article-date">
-  	<time datetime="2019-11-18T00:09:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-18</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/">使能ARM Cortex M4的FPU</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" target="_blank" rel="noopener" class="js-tag article-tag-list-link color2">ARM OS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/ARM//" class="article-tag-list-link color4">ARM</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="archive-article-date">
-  	<time datetime="2019-11-09T09:23:24.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-09</time>
-</a>
-        </div>
-    	 
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/">oops-rtos的实现</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/2019/11/page/2/">2</a><a class="extend next" rel="next" href="/archives/2019/11/page/2/">Next &amp;raquo;</a>
-    </nav>
+  
+
   
 
 
@@ -485,8 +384,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
