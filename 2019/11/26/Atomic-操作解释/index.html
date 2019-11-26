@@ -15,10 +15,10 @@
 <meta property="og:site_name" content="Oopsrtos">
 <meta property="og:description" content="目录1 什么是原子操作？2 为什么我们需要原子操作？3 流水线4 什么是数据冒险？5 什么是控制冒险？6 多级流水线的影响。7 乱续8 屏障9 怎么实现原子操作？10 SWP和SWPB指令.11 ARM V6及以后 的LDREX STREX 指令.12 linux kernel如何实现原子操作">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;source&#x2F;images&#x2F;Fivestagespipeline.png">
-<meta property="og:updated_time" content="2019-11-26T03:48:13.682Z">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;26&#x2F;Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A&#x2F;Fivestagespipeline.png">
+<meta property="og:updated_time" content="2019-11-26T03:54:49.439Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;source&#x2F;images&#x2F;Fivestagespipeline.png">
+<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;26&#x2F;Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A&#x2F;Fivestagespipeline.png">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
   
@@ -185,7 +185,7 @@
 <p>调用这个函数强制变量a的赋值正确。这个调用其实使用方法也是错误的，读者将这段代码看作伪代码即可。</p>
 <p>2 为什么我们需要原子操作？<br>原子操作其实是在2004年以后提得比较多，主要原因是那一年多核cpu开始流行，多线程并发的竞争更严重。在多核系统起来前，原子操作也有提到，但是实现方法比较粗暴，直接关CPU中断了事，因为单核的cpu，直接关中断等于禁止线程调度，不响应硬件中断需求。所以没有变量会被修改的现象。</p>
 <p>3 流水线<br>接下来解释一下流水线和内存变量赋值的关系，以及什么是数据、控制竞争。<br>1985年以后，大部分的处理器都采用了流水线来进行指令重叠来提高性能（有个特特例是8051仍然采用状态机）。本质上讲，流水线的指令重叠指的是时间上重叠。<br>以misp为例，misp执行一条指令需要执行5个操作，分别为，取指、译码、执行、访存、回写。</p>
-<p><img src="/source/images/Fivestagespipeline.png" alt="5级流水线"><br>（图片来源wiki）</p>
+<p><img src="/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/Fivestagespipeline.png" alt="5级流水线"><br>（图片来源wiki）</p>
 <p>流水线CPU=理想流水线CPI+结构化停顿+数据冒险停顿+控制停顿</p>
 <p>4 什么是数据冒险</p>
 <p>（参考《计算机体系结构 量化研究方法》）<br>上面的图片中，如箭头，每一条指令都依赖与上一条指令，这就是数据相关代码，为了保证指令的正确执行，必须等待上一条指令回写内存之后，下一条指令才能执行。同时执行这条指令会导致流水线互锁，如果流水线深度大于指令间间隔，指令前置等旁路技术无法解决问题的时候，cpu需要停顿。否则指令执行会发生错误。<br>当指令间存在名称相关，并且两条指令间很接近，那么执行期间的重叠改变对相关操作数的访问顺序，冒险就存在。</p>
