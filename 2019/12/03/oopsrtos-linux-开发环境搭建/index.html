@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="Oopsrtos">
 <meta property="og:description" content="本文主要讲解如何在linux上搭建oopsrtos的开发环境。 系统：debian 10compiler toolchain:gcc-arm-none-eabi">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2019-12-03T00:25:20.567Z">
+<meta property="og:updated_time" content="2019-12-03T02:45:58.359Z">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
@@ -181,7 +181,8 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mv gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2 ~/gcc-arm-none-eabi</span><br></pre></td></tr></table></figure>
 <p>解压工具链</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -jxf gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2</span><br></pre></td></tr></table></figure>
-
+<p>安装依赖</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install gcc automake autoconf libtool make</span><br></pre></td></tr></table></figure>
       
 
       
