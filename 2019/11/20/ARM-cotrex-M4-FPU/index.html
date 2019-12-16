@@ -15,10 +15,14 @@
 <meta property="og:site_name" content="Oopsrtos">
 <meta property="og:description" content="这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。 如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;fpu_stack_push_no_fpu.PNG">
-<meta property="og:updated_time" content="2019-12-16T14:18:56.323Z">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;fpu_stack_push.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;no-os-no-fpu-op.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;no-os-has-fpu-op.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;no-os-no-fpu-op-isr.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;no-os-no-fpu-op-isr-nest.PNG">
+<meta property="og:updated_time" content="2019-12-16T16:58:56.519Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;fpu_stack_push_no_fpu.PNG">
+<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;fpu_stack_push.PNG">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
   
@@ -185,8 +189,14 @@
 <p>CONTROL ，Bit2是FPCA的控制寄存器，这个为只有在Cortex-M4F上才有用，由于CONTROL没有映射到物理内存,操作这个寄存器使用MSR和MRS指令。</p>
 <p>异常机制里，我们通过查看EXC_RETURN的Bit4，判断上下文是否使用了浮点寄存器，如果该值为1，表示异常返回上下文未使用浮点寄存器，如果该值为0，说明异常返回上下文使用了浮点寄存器，异常返回上下文包括用户进程上下文、中断上下文。操作系统在配置好相应环境后，可以根据这个位，作为是否需要进行浮点寄存器入栈的依据。</p>
 <h3 id="AAPCS"><a href="#AAPCS" class="headerlink" title="AAPCS"></a>AAPCS</h3><p>AAPCS 的意思是ARM Architecture Procedure Call Standard,提这个主要是解释ARM V7架构的过程调度标准，在涉及到任务调度时，操作系统需要实现现场保护，那么首先要搞清楚，什么是现场，现场的谁需要保护？怎么实现保护。完整的AAPCS不在这里解释，否则就超纲了，只提一点，M4核如果没有开启FPU，那么它和M3的保护机制是一样的，如果开启了，操作系统需要提供更大的栈去保存S0 ~ S31和FPSCR这33个寄存器。下文会具体分析怎么实现浮点相关寄存器的入栈和出栈。</p>
-<h3 id="NVIC"><a href="#NVIC" class="headerlink" title="NVIC"></a>NVIC</h3><p>NVIC 全称是嵌入式中断控制器，在cortex M系列的IP中它用于替代GIC的作用的，主要是在M系列的IP中没有了异常的概念，向量中断取代了arm v7<br>的异常概念，后续会发几篇博文解释什么是GIC，什么是异常模式，以及各个异常之间的切换是如何实现的，先挖坑，具体什么时候填看心情。继续解释什么是NVIC，嵌入式向量中断这个IP完成了逻辑开发过程中部分寄存器入栈的事情，先看下面的图片。<br><img src="/2019/11/20/ARM-cotrex-M4-FPU/fpu_stack_push_no_fpu.PNG" alt="image0"></p>
-<h2 id="FPU的使用场景"><a href="#FPU的使用场景" class="headerlink" title="FPU的使用场景"></a>FPU的使用场景</h2><h3 id="没有操作系统的情况"><a href="#没有操作系统的情况" class="headerlink" title="没有操作系统的情况"></a>没有操作系统的情况</h3><p>在没有操作系统的场景下，现场是不需要保护的，不管使用了多少层的中断调用，函数包含了多少级，在这种情况下，浮点寄存器的和整数寄存器的现场保护由硬件提供，这个外设称为NVIC，全称是嵌入式中断控制器，它会在进入中断的时候，自行将R0 ~ R3 ，R13 ~ R15和S0 ~ S15和FPSCR入栈，RESET后的栈默认为MSP。硬件自动判定是否保存浮点寄存器，用户无需关心相关事情。</p>
+<h3 id="NVIC"><a href="#NVIC" class="headerlink" title="NVIC"></a>NVIC</h3><p>NVIC （ Nested Vectored Interrupt Controller）全称是嵌入式向量中断控制器，在cortex-M系列的IP中它作为GIC，在M系列的IP中没有了异常的概念，向量中断取代了arm v7的异常概念，后续会发几篇博文解释什么是GIC，什么是异常模式，以及各个异常之间的切换是如何实现的，先挖坑，具体什么时候填看心情。继续解释什么是NVIC，NVIC这个IP完成了裸机开发过程中部分寄存器入栈的事情，先看下面的图片。<br><img src="/2019/11/20/ARM-cotrex-M4-FPU/fpu_stack_push.PNG" alt="image0"><br>图中左显示的栈帧是没有使用浮点单元的时候NVIC自动入栈情况，在没有开启浮点单元的情况下，硬件对栈只处理R0 ~ R3，R12 ~ R15这几个寄存器，这个存储和cortex M3是一样的处理情况。图中右侧是开启了FPU的入栈情况，对比左侧，多了Sx寄存器的入栈。</p>
+<h2 id="FPU的使用场景"><a href="#FPU的使用场景" class="headerlink" title="FPU的使用场景"></a>FPU的使用场景</h2><h3 id="没有操作系统的情况"><a href="#没有操作系统的情况" class="headerlink" title="没有操作系统的情况"></a>没有操作系统的情况</h3><p>在没有操作系统的场景下，现场是不需要保护的，不管使用了多少层的中断调用，函数包含了多少级，在这种情况下，浮点寄存器的和整数寄存器的现场保护由硬件提供。硬件自动判定是否保存浮点寄存器，用户无需关心相关事情。</p>
+<h4 id="无浮点寄存器操作"><a href="#无浮点寄存器操作" class="headerlink" title="无浮点寄存器操作"></a>无浮点寄存器操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU/no-os-no-fpu-op.PNG" alt="image1"><br>image1<br>图中显示，软件启动FPU，在用户代码和ISR中均没有浮点数操作的情况。在没有浮点数操作的情况中，CONTROL.FPCA一直为低位，如果在这种情况下，中断被触发，在跳转中断前栈帧的处理和cortex-M3一样。并且FPU.EXC_RETURN[4]这个寄存器位一直为高，它表示栈帧没有将浮点寄存器入栈。</p>
+<h4 id="被中断的源码有浮点寄存器操作"><a href="#被中断的源码有浮点寄存器操作" class="headerlink" title="被中断的源码有浮点寄存器操作"></a>被中断的源码有浮点寄存器操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU/no-os-has-fpu-op.PNG" alt="image2"><br>image2<br>图中显示，软件启用FPU，在用户代码中，即被中断打断前的代码中有浮点数操作，在ISR中没有浮点数操作的情况。在用户代码有浮点数操作的情况下，CONTROL.FPCA一为高位。如果在这种情况下，中断被触发，在跳转中断前，FPU.EXC_RETURN[4]这个寄存器位会被置位0，它表示栈帧将浮点寄存器入栈，CONTROL.FPCA会被硬件置位低并且进入ISR。这里解释lazy stacking的部分概念，在上述情况下触发中断，跳转到中断异常之前，NVIC将部分实数寄存器入栈，见NVIC介绍，从图看出，栈帧结构是从FPSCR开始一直到R0的，实际上，NVIC并没有将S0 ~ S15入栈，它仅仅将R0 ~ R3,R12,LR，PC，xPSR这几个寄存器实际入栈，浮点寄存器没有入栈，硬件实际上在msp栈中保留了浮点寄存器需要的内存空间，然后将预留的内存地址更新到了FPCAR寄存器中，那么什么时候会发生浮点寄存器入栈呢？实际上逻辑开发过程中，如果ISR中没有浮点数操作，以及相关的浮点控制指令被执行，浮点寄存器永远不会入栈。</p>
+<p>ps. FPU.EXC_RETURN 这个寄存器被映射到了LR寄存器中。</p>
+<h4 id="中断和main（）函数均有浮点数操作"><a href="#中断和main（）函数均有浮点数操作" class="headerlink" title="中断和main（）函数均有浮点数操作"></a>中断和main（）函数均有浮点数操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU/no-os-no-fpu-op-isr.PNG" alt="image3"><br>image3<br>图中显示，软件启用FPU，在用户代码中，即被中断打断前的代码中有浮点数操作，在ISR中也有浮点数操作的情况。在ISR到来之前栈结构和上一种情况是一样的，观察图中CONTROL.FPCA寄存器状态，在ISR中有浮点数操作的时候，之前没有存储的浮点寄存器，在这个时候被存储了，然后CONTROL.FPCA会被硬件清0，这个就是完整的lazy stacking过程。</p>
+<h4 id="中断（嵌套）和main（）函数均有浮点数操作"><a href="#中断（嵌套）和main（）函数均有浮点数操作" class="headerlink" title="中断（嵌套）和main（）函数均有浮点数操作"></a>中断（嵌套）和main（）函数均有浮点数操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU/no-os-no-fpu-op-isr-nest.PNG" alt="image4"><br>image4<br>图中显示，软件启用FPU，在用户代码中，即被中断打断前的代码中有浮点数操作，在ISR中无浮点数操作，但是ISR被嵌套了，高优先级的ISR有浮点数操作。第一个中断的栈处理和image3一样，但是有更高优先级的中断嵌套了，然后高优先级的ISR有浮点数操作，这时候触发此一次的lazy stacking，将之前的浮点寄存器入栈。</p>
+<p>这里做一个小结，在无操作系统的情况下，开启浮点单元，浮点数的入栈情况发生在中断中有浮点数操作的情况下，如果用户源码无浮点数操作，那么被ISR打断的时候，不会发生浮点数入栈的情况，这个通过CONTROL.FPCA观察可知。浮点数入栈发生在中断处理函数有浮点数操作的情况下，如果，被打断的源码有浮点数操作，那么浮点寄存器入栈发生在中断源码有浮点数操作的情况下。如果ISR没有浮点数操作，那么无论多少级中断嵌套，均不会有浮点数入栈；如果浮点数发生多级嵌套，第一次入栈也只会发生在第二次浮点操作的时候，当ISR中没有浮点数操作的时候，它被打断的时候，硬件并不会为它预留浮点寄存器的栈空间，这一点需要结和image1理解（这个比较复杂，请读者自行思考多级ISR嵌套的情况，如果不能理解这里的知识，下面的带操作系统的情况是看不懂的，这个知识点不能跳过去）。</p>
 <h3 id="有操作系统的情况"><a href="#有操作系统的情况" class="headerlink" title="有操作系统的情况"></a>有操作系统的情况</h3><p>带操作系统的时候，对浮点寄存器的处理，有两种处理方式，一种是全保存，一种lazy stacking。</p>
 <h4 id="全保存"><a href="#全保存" class="headerlink" title="全保存"></a>全保存</h4><p>这种方式简单直接，就是只要开启了浮点单元，在上下文切换函数里面，浮点寄存器直接入栈和出栈，不管上下文是否使用了浮点寄存器。</p>
 <h4 id="lazy-stacking"><a href="#lazy-stacking" class="headerlink" title="lazy stacking"></a>lazy stacking</h4><p>这种方式实现起来比较复杂，分两种情况讨论，一种是中断中不使用浮点寄存器，一种是中断中使用浮点寄存器。</p>
@@ -202,6 +212,7 @@
 <li>oops-rtos</li>
 </ul>
 <p>bilibili……我还没写哈</p>
+<p>本文参考文献（参考文献按照相关性从大到小排序）：<br>1、Cortex-M4(F) Lazy Stacking and Context Switching application note 298<br>2、Cortex-M4 Technical Reference Manual Revision r0p1<br>3、Cortex™-M3 Technical Reference Manual Revision r1p1<br>4、ARM®v7-M Architecture Reference Manual<br>5、（AAPCS32）Procedure Call Standard for the ARM Architecture ABI r2.10<br>6、ARM® Architecture Reference Manual ARMv7-A and ARMv7-R edition</p>
 
       
 
