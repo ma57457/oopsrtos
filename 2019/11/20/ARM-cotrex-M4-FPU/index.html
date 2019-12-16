@@ -15,8 +15,10 @@
 <meta property="og:site_name" content="Oopsrtos">
 <meta property="og:description" content="这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。 如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2019-11-26T06:45:46.516Z">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;fpu_stack_push_no_fpu.PNG">
+<meta property="og:updated_time" content="2019-12-16T14:18:56.323Z">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;fpu_stack_push_no_fpu.PNG">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
   
@@ -179,10 +181,11 @@
 <p>CPACR（Coprocessor Access Control Register），物理地址是0xE000ED88。这个寄存器用于控制浮点单元的开启。处理器reset后默认关闭FPU。</p>
 <p>FPCCR（Floating-point Context Control Register），地址0xE000EF34。寄存器用于控制上下文的保存，默认情况下，lazy stacking机制开启。本文会有大篇幅讲解lazy stacking。</p>
 <p>FPCAR（Floating-point Context Address Register），地址0xE000EF38。发生异常后，该寄存器保存了栈用于为浮点寄存器预留的栈帧地址，实际上未发生浮点寄存器入栈，这个是lazy stacking机制，后面会详细解释。</p>
-<p>FPDSCR（Floating-point Default Status Control Register），地址 0xE000EF3C，保存了FPSCR的默认值，？蛤，写到这里我自己懵了，这有啥用，我要默认值在reset后，修改FPSCR之前我自己存下来不好吗？</p>
+<p>FPDSCR（Floating-point Default Status Control Register），地址 0xE000EF3C，保存了FPSCR的默认值，没有搞懂这个寄存器的作用。</p>
 <p>CONTROL ，Bit2是FPCA的控制寄存器，这个为只有在Cortex-M4F上才有用，由于CONTROL没有映射到物理内存,操作这个寄存器使用MSR和MRS指令。</p>
 <p>异常机制里，我们通过查看EXC_RETURN的Bit4，判断上下文是否使用了浮点寄存器，如果该值为1，表示异常返回上下文未使用浮点寄存器，如果该值为0，说明异常返回上下文使用了浮点寄存器，异常返回上下文包括用户进程上下文、中断上下文。操作系统在配置好相应环境后，可以根据这个位，作为是否需要进行浮点寄存器入栈的依据。</p>
 <h3 id="AAPCS"><a href="#AAPCS" class="headerlink" title="AAPCS"></a>AAPCS</h3><p>AAPCS 的意思是ARM Architecture Procedure Call Standard,提这个主要是解释ARM V7架构的过程调度标准，在涉及到任务调度时，操作系统需要实现现场保护，那么首先要搞清楚，什么是现场，现场的谁需要保护？怎么实现保护。完整的AAPCS不在这里解释，否则就超纲了，只提一点，M4核如果没有开启FPU，那么它和M3的保护机制是一样的，如果开启了，操作系统需要提供更大的栈去保存S0 ~ S31和FPSCR这33个寄存器。下文会具体分析怎么实现浮点相关寄存器的入栈和出栈。</p>
+<h3 id="NVIC"><a href="#NVIC" class="headerlink" title="NVIC"></a>NVIC</h3><p>NVIC 全称是嵌入式中断控制器，在cortex M系列的IP中它用于替代GIC的作用的，主要是在M系列的IP中没有了异常的概念，向量中断取代了arm v7<br>的异常概念，后续会发几篇博文解释什么是GIC，什么是异常模式，以及各个异常之间的切换是如何实现的，先挖坑，具体什么时候填看心情。继续解释什么是NVIC，嵌入式向量中断这个IP完成了逻辑开发过程中部分寄存器入栈的事情，先看下面的图片。<br><img src="/2019/11/20/ARM-cotrex-M4-FPU/fpu_stack_push_no_fpu.PNG" alt="image0"></p>
 <h2 id="FPU的使用场景"><a href="#FPU的使用场景" class="headerlink" title="FPU的使用场景"></a>FPU的使用场景</h2><h3 id="没有操作系统的情况"><a href="#没有操作系统的情况" class="headerlink" title="没有操作系统的情况"></a>没有操作系统的情况</h3><p>在没有操作系统的场景下，现场是不需要保护的，不管使用了多少层的中断调用，函数包含了多少级，在这种情况下，浮点寄存器的和整数寄存器的现场保护由硬件提供，这个外设称为NVIC，全称是嵌入式中断控制器，它会在进入中断的时候，自行将R0 ~ R3 ，R13 ~ R15和S0 ~ S15和FPSCR入栈，RESET后的栈默认为MSP。硬件自动判定是否保存浮点寄存器，用户无需关心相关事情。</p>
 <h3 id="有操作系统的情况"><a href="#有操作系统的情况" class="headerlink" title="有操作系统的情况"></a>有操作系统的情况</h3><p>带操作系统的时候，对浮点寄存器的处理，有两种处理方式，一种是全保存，一种lazy stacking。</p>
 <h4 id="全保存"><a href="#全保存" class="headerlink" title="全保存"></a>全保存</h4><p>这种方式简单直接，就是只要开启了浮点单元，在上下文切换函数里面，浮点寄存器直接入栈和出栈，不管上下文是否使用了浮点寄存器。</p>
