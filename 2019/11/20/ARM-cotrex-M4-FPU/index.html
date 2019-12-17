@@ -20,7 +20,7 @@
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;no-os-has-fpu-op.PNG">
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;no-os-no-fpu-op-isr.PNG">
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;no-os-no-fpu-op-isr-nest.PNG">
-<meta property="og:updated_time" content="2019-12-16T17:04:56.053Z">
+<meta property="og:updated_time" content="2019-12-17T06:35:26.380Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU&#x2F;fpu_stack_push.PNG">
   
@@ -87,11 +87,11 @@
 				
 					<a class="github" target="_blank" href="#" title="github"><i class="icon-github"></i></a>
 		        
-					<a class="weibo" target="_blank" href="#" title="weibo"><i class="icon-weibo"></i></a>
-		        
 					<a class="rss" target="_blank" href="#" title="rss"><i class="icon-rss"></i></a>
 		        
-					<a class="zhihu" target="_blank" href="#" title="zhihu"><i class="icon-zhihu"></i></a>
+					<a class="weixin" target="_blank" href="#" title="weixin"><i class="icon-weixin"></i></a>
+		        
+					<a class="mail" target="_blank" href="/oopsmartin@oopsrtos.com" title="mail"><i class="icon-mail"></i></a>
 		        
 			</div>
 		</nav>
@@ -128,11 +128,11 @@
 					
 						<a class="github" target="_blank" href="#" title="github"><i class="icon-github"></i></a>
 			        
-						<a class="weibo" target="_blank" href="#" title="weibo"><i class="icon-weibo"></i></a>
-			        
 						<a class="rss" target="_blank" href="#" title="rss"><i class="icon-rss"></i></a>
 			        
-						<a class="zhihu" target="_blank" href="#" title="zhihu"><i class="icon-zhihu"></i></a>
+						<a class="weixin" target="_blank" href="#" title="weixin"><i class="icon-weixin"></i></a>
+			        
+						<a class="mail" target="_blank" href="/oopsmartin@oopsrtos.com" title="mail"><i class="icon-mail"></i></a>
 			        
 				</div>
 			</nav>
@@ -229,6 +229,16 @@
                   <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
                   <div class="reward-box">
                     
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="/images/ali-pay.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="/images/weixin-pay.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
                     
                   </div>
                 </span>
@@ -342,10 +352,43 @@
         </div>
         
         
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#FPU相关的寄存器"><span class="toc-number">1.</span> <span class="toc-text">FPU相关的寄存器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AAPCS"><span class="toc-number">2.</span> <span class="toc-text">AAPCS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NVIC"><span class="toc-number">3.</span> <span class="toc-text">NVIC</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FPU的使用场景"><span class="toc-number"></span> <span class="toc-text">FPU的使用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#没有操作系统的情况"><span class="toc-number">1.</span> <span class="toc-text">没有操作系统的情况</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#无浮点寄存器操作"><span class="toc-number">1.1.</span> <span class="toc-text">无浮点寄存器操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#被中断的源码有浮点寄存器操作"><span class="toc-number">1.2.</span> <span class="toc-text">被中断的源码有浮点寄存器操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#中断和main（）函数均有浮点数操作"><span class="toc-number">1.3.</span> <span class="toc-text">中断和main（）函数均有浮点数操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#中断（嵌套）和main（）函数均有浮点数操作"><span class="toc-number">1.4.</span> <span class="toc-text">中断（嵌套）和main（）函数均有浮点数操作</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#有操作系统的情况-还没写好哈"><span class="toc-number">2.</span> <span class="toc-text">有操作系统的情况 还没写好哈</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#全保存"><span class="toc-number">2.1.</span> <span class="toc-text">全保存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#lazy-stacking"><span class="toc-number">2.2.</span> <span class="toc-text">lazy stacking</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#中断中不使用浮点寄存器"><span class="toc-number">2.2.1.</span> <span class="toc-text">中断中不使用浮点寄存器</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#中断中使用浮点寄存器"><span class="toc-number">2.2.2.</span> <span class="toc-text">中断中使用浮点寄存器</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FPU使用实践"><span class="toc-number"></span> <span class="toc-text">FPU使用实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#FPU实践使用的环境"><span class="toc-number">1.</span> <span class="toc-text">FPU实践使用的环境</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
     </div>
 </aside>
 
 
+
+  
+  <div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="ARM-cotrex-M4-FPU" data-title="ARM cotrex M4 FPU" data-url="http://yoursite.com/2019/11/20/ARM-cotrex-M4-FPU/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
 
   
   
