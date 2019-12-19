@@ -24,7 +24,7 @@
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;no-float-op-os.PNG">
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;single-task-fpu.PNG">
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;lazy-stacking0.PNG">
-<meta property="og:updated_time" content="2019-12-19T17:26:32.000Z">
+<meta property="og:updated_time" content="2019-12-19T17:38:16.263Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;fpu_stack_push.PNG">
   
@@ -201,7 +201,7 @@
 <h4 id="中断和main（）函数均有浮点数操作"><a href="#中断和main（）函数均有浮点数操作" class="headerlink" title="中断和main（）函数均有浮点数操作"></a>中断和main（）函数均有浮点数操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/no-os-no-fpu-op-isr.PNG" alt="image3"><br>image3<br>图中显示，软件启用FPU，在用户代码中，即被中断打断前的代码中有浮点数操作，在ISR中也有浮点数操作的情况。在ISR到来之前栈结构和上一种情况是一样的，观察图中CONTROL.FPCA寄存器状态，在ISR中有浮点数操作的时候，之前没有存储的浮点寄存器，在这个时候被存储了，然后CONTROL.FPCA会被硬件清0，这个就是完整的lazy stacking过程。</p>
 <h4 id="中断（嵌套）和main（）函数均有浮点数操作"><a href="#中断（嵌套）和main（）函数均有浮点数操作" class="headerlink" title="中断（嵌套）和main（）函数均有浮点数操作"></a>中断（嵌套）和main（）函数均有浮点数操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/no-os-no-fpu-op-isr-nest.PNG" alt="image4"><br>image4<br>图中显示，软件启用FPU，在用户代码中，即被中断打断前的代码中有浮点数操作，在ISR中无浮点数操作，但是ISR被嵌套了，高优先级的ISR有浮点数操作。第一个中断的栈处理和image3一样，但是有更高优先级的中断嵌套了，然后高优先级的ISR有浮点数操作，这时候触发此一次的lazy stacking，将之前的浮点寄存器入栈。</p>
 <p>这里做一个小结，在无操作系统的情况下，开启浮点单元，浮点数的入栈情况发生在中断中有浮点数操作的情况下，如果用户源码无浮点数操作，那么被ISR打断的时候，不会发生浮点数入栈的情况，这个通过CONTROL.FPCA观察可知。浮点数入栈发生在中断处理函数有浮点数操作的情况下，如果，被打断的源码有浮点数操作，那么浮点寄存器入栈发生在中断源码有浮点数操作的情况下。如果ISR没有浮点数操作，那么无论多少级中断嵌套，均不会有浮点数入栈；如果浮点数发生多级嵌套，第一次入栈也只会发生在第二次浮点操作的时候，当ISR中没有浮点数操作的时候，它被打断的时候，硬件并不会为它预留浮点寄存器的栈空间，这一点需要结和image1理解（这个比较复杂，请读者自行思考多级ISR嵌套的情况，如果不能理解这里的知识，下面的带操作系统的情况是看不懂的，这个知识点不能跳过去）。</p>
-<h3 id="有操作系统的情况"><a href="#有操作系统的情况" class="headerlink" title="有操作系统的情况"></a>有操作系统的情况</h3><p>在设计上下文调度器的时候，有两种设计方案<br>1、在上下文调度的时候，总是保存浮点数寄存器；<br>2、在上下文调度的时候，检测EXC_RERUEN[4]是否为0，如果是才进行浮点数保存，这意味着上文在切换之前是有浮点数调用的。</p>
+<h3 id="有操作系统的情况"><a href="#有操作系统的情况" class="headerlink" title="有操作系统的情况"></a>有操作系统的情况</h3><p>在设计上下文调度器的时候，有三种设计方案<br>1、在上下文调度的时候，总是保存浮点数寄存器；<br>2、在上下文调度的时候，检测EXC_RERUEN[4]是否为0，如果是才进行浮点数保存，这意味着上文在切换之前是有浮点数调用的;<br>3、lazy stacking。</p>
 <h4 id="方式1"><a href="#方式1" class="headerlink" title="方式1"></a>方式1</h4><p>这种方式很简单，缺点是每次的上下文切换都花费很长的时间，（裸机情况下没有FPU启用的情况下，任务被中断打断，需要12个时钟周期的延迟时间），如果启用了FPU，需要保存完整的S0 ~ S31，FPSCR，寄存器，最少68个时钟周期。在任务使用浮点数少的情况下，这对性能会有影响。<br><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/no-float-op-os.PNG" alt="image5"><br>image5</p>
 <h4 id="方式2"><a href="#方式2" class="headerlink" title="方式2"></a>方式2</h4><p>这种方式在每次的上下文切换时，需要检测EXC_RERURN[4]这个bit位，确认上文是否有使用FPU。有一点需要注意，在创建任务栈的时候，LR[4]寄存器位必须设置为1，匹配后续映射的EXC_RERURN[4]这个位。<br>当任务中有浮点数操作的时候，CONTROL.FPCA 这个位会被置位，当任务被挂起的时候，这里的挂起指的是被异常打断，这个位会存储到EXC_RERURN[4]中，它们的映射关系为</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">if (1 == CONTROL.FPCA)</span><br><span class="line">    EXC_RETURN[4] = 0;</span><br></pre></td></tr></table></figure>
