@@ -6,17 +6,27 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>简介 | Oopsrtos</title>
+  <title>ARM cotrex M4 FPU（lazy stacking） | Oopsrtos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Oops RTOS是从M-RTOS上fork出来的，本来M-RTOS的定位是一个游戏之作，所以很多地方不完善，现在的想法是将旧内核的代码完善，然后oops的定位是教学系统，兼容的架构以arm为主，如果有时间会将risc-v加上。暂时就这么介绍了吧。然后旧网站M-rtos.com 暂时还会运营，但是后续将其他博客内容转过来就会下架了，估计就两天左右。">
+  <meta name="description" content="这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。 如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存">
+<meta name="keywords" content="ARM">
 <meta property="og:type" content="article">
-<meta property="og:title" content="简介">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;09&#x2F;%E7%AE%80%E4%BB%8B&#x2F;index.html">
+<meta property="og:title" content="ARM cotrex M4 FPU（lazy stacking）">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;index.html">
 <meta property="og:site_name" content="Oopsrtos">
-<meta property="og:description" content="Oops RTOS是从M-RTOS上fork出来的，本来M-RTOS的定位是一个游戏之作，所以很多地方不完善，现在的想法是将旧内核的代码完善，然后oops的定位是教学系统，兼容的架构以arm为主，如果有时间会将risc-v加上。暂时就这么介绍了吧。然后旧网站M-rtos.com 暂时还会运营，但是后续将其他博客内容转过来就会下架了，估计就两天左右。">
+<meta property="og:description" content="这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。 如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2019-12-01T14:38:58.230Z">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;fpu_stack_push.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;no-os-no-fpu-op.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;no-os-has-fpu-op.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;no-os-no-fpu-op-isr.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;no-os-no-fpu-op-isr-nest.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;no-float-op-os.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;single-task-fpu.PNG">
+<meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;lazy-stacking0.PNG">
+<meta property="og:updated_time" content="2019-12-19T17:26:32.000Z">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;fpu_stack_push.PNG">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
   
@@ -152,30 +162,71 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-简介" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-ARM-cotrex-M4-FPU-lazy-stacking" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      简介
+      ARM cotrex M4 FPU（lazy stacking）
     </h1>
   
 
         
-        <a href="/2019/11/09/%E7%AE%80%E4%BB%8B/" class="archive-article-date">
-  	<time datetime="2019-11-09T06:16:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-09</time>
+        <a href="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/" class="archive-article-date">
+  	<time datetime="2019-11-20T04:01:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-20</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-      <p>Oops RTOS是从M-RTOS上fork出来的，本来M-RTOS的定位是一个游戏之作，所以很多地方不完善，现在的想法是将旧内核的代码完善，然后oops的定位是教学系统，兼容的架构以arm为主，如果有时间会将risc-v加上。<br>暂时就这么介绍了吧。然后旧网站M-rtos.com 暂时还会运营，但是后续将其他博客内容转过来就会下架了，估计就两天左右。</p>
+      <p>这是一篇关于ARM cortex M4的FPU的简介，FPU的全称是flowting point unit。</p>
+<p>如果是带操作系统，有两个宏需要注意一下。在编译命令或者Makefile里面添加这两个宏-D__FPU_PRESENT、-D__FPU_USED=1。添加这两个宏的目的是为了确保CPACR的CP10和CP11是打开的（在reset之后，这四个bit是关闭的）。当然，用户也可以自行给这两个寄存器位赋值，不管我说的那两个宏，我看了其他操作系统（freertos、rtthread、ucos iii）的做法，基本都是要定义这两个宏，操作系统才会在pendsv里面对浮点寄存器入栈。我不打算标新立异，所以，使用oops的时候，请定义这两个宏哈。</p>
 <a id="more"></a>
-
-<p>源码地址：<a href="https://github.com/oopsrtos/OOPSRTOS">https://github.com/oopsrtos/OOPSRTOS</a></p>
+<h3 id="FPU相关的寄存器"><a href="#FPU相关的寄存器" class="headerlink" title="FPU相关的寄存器"></a>FPU相关的寄存器</h3><p>FPSCR（Floating-point Status and Control Register）,故名思意，这个寄存器是用于控制浮点寄存器和查看浮点寄存器状态的，由于它没有直接映射到内存物理地址，ARM提供了特殊的thumb指令去读取这个寄存器，VMSR（move to floating-point registe from floation-point  system register）和VMRS（move to ARM Core register from floating-point System register）,具体怎么用，呃，看名字猜一下，后面会提到的。</p>
+<p>CPACR（Coprocessor Access Control Register），物理地址是0xE000ED88。这个寄存器用于控制浮点单元的开启。处理器reset后默认关闭FPU。</p>
+<p>FPCCR（Floating-point Context Control Register），地址0xE000EF34。寄存器用于控制上下文的保存，默认情况下，lazy stacking机制开启。本文会有大篇幅讲解lazy stacking。</p>
+<p>FPCAR（Floating-point Context Address Register），地址0xE000EF38。发生异常后，该寄存器保存了栈用于为浮点寄存器预留的栈帧地址，实际上未发生浮点寄存器入栈，这个是lazy stacking机制，后面会详细解释。</p>
+<p>FPDSCR（Floating-point Default Status Control Register），地址 0xE000EF3C，保存了FPSCR的默认值，没有搞懂这个寄存器的作用。</p>
+<p>CONTROL ，Bit2是FPCA的控制寄存器，这个为只有在Cortex-M4F上才有用，由于CONTROL没有映射到物理内存,操作这个寄存器使用MSR和MRS指令。</p>
+<p>异常机制里，我们通过查看EXC_RETURN的Bit4，判断上下文是否使用了浮点寄存器，如果该值为1，表示异常返回上下文未使用浮点寄存器，如果该值为0，说明异常返回上下文使用了浮点寄存器，异常返回上下文包括用户进程上下文、中断上下文。操作系统在配置好相应环境后，可以根据这个位，作为是否需要进行浮点寄存器入栈的依据。</p>
+<h3 id="AAPCS"><a href="#AAPCS" class="headerlink" title="AAPCS"></a>AAPCS</h3><p>AAPCS 的意思是ARM Architecture Procedure Call Standard,提这个主要是解释ARM V7架构的过程调度标准，在涉及到任务调度时，操作系统需要实现现场保护，那么首先要搞清楚，什么是现场，现场的谁需要保护？怎么实现保护。完整的AAPCS不在这里解释，否则就超纲了，只提一点，M4核如果没有开启FPU，那么它和M3的保护机制是一样的，如果开启了，操作系统需要提供更大的栈去保存S0 ~ S31和FPSCR这33个寄存器。下文会具体分析怎么实现浮点相关寄存器的入栈和出栈。</p>
+<h3 id="NVIC"><a href="#NVIC" class="headerlink" title="NVIC"></a>NVIC</h3><p>NVIC （ Nested Vectored Interrupt Controller）全称是嵌入式向量中断控制器，在cortex-M系列的IP中它作为GIC，在M系列的IP中没有了异常的概念，向量中断取代了arm v7的异常概念，后续会发几篇博文解释什么是GIC，什么是异常模式，以及各个异常之间的切换是如何实现的，先挖坑，具体什么时候填看心情。继续解释什么是NVIC，NVIC这个IP完成了裸机开发过程中部分寄存器入栈的事情，先看下面的图片。<br><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/fpu_stack_push.PNG" alt="image0"><br>图中左显示的栈帧是没有使用浮点单元的时候NVIC自动入栈情况，在没有开启浮点单元的情况下，硬件对栈只处理R0 ~ R3，R12 ~ R15这几个寄存器，这个存储和cortex M3是一样的处理情况。图中右侧是开启了FPU的入栈情况，对比左侧，多了Sx寄存器的入栈。</p>
+<h2 id="FPU的使用场景"><a href="#FPU的使用场景" class="headerlink" title="FPU的使用场景"></a>FPU的使用场景</h2><h3 id="没有操作系统的情况"><a href="#没有操作系统的情况" class="headerlink" title="没有操作系统的情况"></a>没有操作系统的情况</h3><p>在没有操作系统的场景下，现场是不需要保护的，不管使用了多少层的中断调用，函数包含了多少级，在这种情况下，浮点寄存器的和整数寄存器的现场保护由硬件提供。硬件自动判定是否保存浮点寄存器，用户无需关心相关事情。</p>
+<h4 id="无浮点寄存器操作"><a href="#无浮点寄存器操作" class="headerlink" title="无浮点寄存器操作"></a>无浮点寄存器操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/no-os-no-fpu-op.PNG" alt="image1"><br>image1<br>图中显示，软件启动FPU，在用户代码和ISR中均没有浮点数操作的情况。在没有浮点数操作的情况中，CONTROL.FPCA一直为低位，如果在这种情况下，中断被触发，在跳转中断前栈帧的处理和cortex-M3一样。并且FPU.EXC_RETURN[4]这个寄存器位一直为高，它表示栈帧没有将浮点寄存器入栈。</p>
+<h4 id="被中断的源码有浮点寄存器操作"><a href="#被中断的源码有浮点寄存器操作" class="headerlink" title="被中断的源码有浮点寄存器操作"></a>被中断的源码有浮点寄存器操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/no-os-has-fpu-op.PNG" alt="image2"><br>image2<br>图中显示，软件启用FPU，在用户代码中，即被中断打断前的代码中有浮点数操作，在ISR中没有浮点数操作的情况。在用户代码有浮点数操作的情况下，CONTROL.FPCA一为高位。如果在这种情况下，中断被触发，在跳转中断前，FPU.EXC_RETURN[4]这个寄存器位会被置位0，它表示栈帧将浮点寄存器入栈，CONTROL.FPCA会被硬件置位低并且进入ISR。这里解释lazy stacking的部分概念，在上述情况下触发中断，跳转到中断异常之前，NVIC将部分实数寄存器入栈，见NVIC介绍，从图看出，栈帧结构是从FPSCR开始一直到R0的，实际上，NVIC并没有将S0 ~ S15入栈，它仅仅将R0 ~ R3,R12,LR，PC，xPSR这几个寄存器实际入栈，浮点寄存器没有入栈，硬件实际上在msp栈中保留了浮点寄存器需要的内存空间，然后将预留的内存地址更新到了FPCAR寄存器中，那么什么时候会发生浮点寄存器入栈呢？实际上逻辑开发过程中，如果ISR中没有浮点数操作，以及相关的浮点控制指令被执行，浮点寄存器永远不会入栈。</p>
+<p>ps. FPU.EXC_RETURN 这个寄存器被映射到了LR寄存器中。</p>
+<h4 id="中断和main（）函数均有浮点数操作"><a href="#中断和main（）函数均有浮点数操作" class="headerlink" title="中断和main（）函数均有浮点数操作"></a>中断和main（）函数均有浮点数操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/no-os-no-fpu-op-isr.PNG" alt="image3"><br>image3<br>图中显示，软件启用FPU，在用户代码中，即被中断打断前的代码中有浮点数操作，在ISR中也有浮点数操作的情况。在ISR到来之前栈结构和上一种情况是一样的，观察图中CONTROL.FPCA寄存器状态，在ISR中有浮点数操作的时候，之前没有存储的浮点寄存器，在这个时候被存储了，然后CONTROL.FPCA会被硬件清0，这个就是完整的lazy stacking过程。</p>
+<h4 id="中断（嵌套）和main（）函数均有浮点数操作"><a href="#中断（嵌套）和main（）函数均有浮点数操作" class="headerlink" title="中断（嵌套）和main（）函数均有浮点数操作"></a>中断（嵌套）和main（）函数均有浮点数操作</h4><p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/no-os-no-fpu-op-isr-nest.PNG" alt="image4"><br>image4<br>图中显示，软件启用FPU，在用户代码中，即被中断打断前的代码中有浮点数操作，在ISR中无浮点数操作，但是ISR被嵌套了，高优先级的ISR有浮点数操作。第一个中断的栈处理和image3一样，但是有更高优先级的中断嵌套了，然后高优先级的ISR有浮点数操作，这时候触发此一次的lazy stacking，将之前的浮点寄存器入栈。</p>
+<p>这里做一个小结，在无操作系统的情况下，开启浮点单元，浮点数的入栈情况发生在中断中有浮点数操作的情况下，如果用户源码无浮点数操作，那么被ISR打断的时候，不会发生浮点数入栈的情况，这个通过CONTROL.FPCA观察可知。浮点数入栈发生在中断处理函数有浮点数操作的情况下，如果，被打断的源码有浮点数操作，那么浮点寄存器入栈发生在中断源码有浮点数操作的情况下。如果ISR没有浮点数操作，那么无论多少级中断嵌套，均不会有浮点数入栈；如果浮点数发生多级嵌套，第一次入栈也只会发生在第二次浮点操作的时候，当ISR中没有浮点数操作的时候，它被打断的时候，硬件并不会为它预留浮点寄存器的栈空间，这一点需要结和image1理解（这个比较复杂，请读者自行思考多级ISR嵌套的情况，如果不能理解这里的知识，下面的带操作系统的情况是看不懂的，这个知识点不能跳过去）。</p>
+<h3 id="有操作系统的情况"><a href="#有操作系统的情况" class="headerlink" title="有操作系统的情况"></a>有操作系统的情况</h3><p>在设计上下文调度器的时候，有两种设计方案<br>1、在上下文调度的时候，总是保存浮点数寄存器；<br>2、在上下文调度的时候，检测EXC_RERUEN[4]是否为0，如果是才进行浮点数保存，这意味着上文在切换之前是有浮点数调用的。</p>
+<h4 id="方式1"><a href="#方式1" class="headerlink" title="方式1"></a>方式1</h4><p>这种方式很简单，缺点是每次的上下文切换都花费很长的时间，（裸机情况下没有FPU启用的情况下，任务被中断打断，需要12个时钟周期的延迟时间），如果启用了FPU，需要保存完整的S0 ~ S31，FPSCR，寄存器，最少68个时钟周期。在任务使用浮点数少的情况下，这对性能会有影响。<br><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/no-float-op-os.PNG" alt="image5"><br>image5</p>
+<h4 id="方式2"><a href="#方式2" class="headerlink" title="方式2"></a>方式2</h4><p>这种方式在每次的上下文切换时，需要检测EXC_RERURN[4]这个bit位，确认上文是否有使用FPU。有一点需要注意，在创建任务栈的时候，LR[4]寄存器位必须设置为1，匹配后续映射的EXC_RERURN[4]这个位。<br>当任务中有浮点数操作的时候，CONTROL.FPCA 这个位会被置位，当任务被挂起的时候，这里的挂起指的是被异常打断，这个位会存储到EXC_RERURN[4]中，它们的映射关系为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">if (1 == CONTROL.FPCA)</span><br><span class="line">    EXC_RETURN[4] = 0;</span><br></pre></td></tr></table></figure>
+<p>ps. EXC_RETURN[4]这个位是可以在用户任务中清除的，不过os一般不会提供这个接口，oopsrtos也不提供。</p>
+<p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/single-task-fpu.PNG" alt="image7"><br>image7<br>图中展示的是利用，在上下文切换的时候，禁止FPU，在切换到使用了FPU的task的时候，重新启用了FPU。禁用和启用均在CPACR处理，这是写处理器控制寄存器。</p>
+<h4 id="方式3"><a href="#方式3" class="headerlink" title="方式3"></a>方式3</h4><h5 id="lazy-stacking"><a href="#lazy-stacking" class="headerlink" title="lazy stacking"></a>lazy stacking</h5><p>什么是lazy stacking？<br>lazy stacking机制在cortex M4里面主要是给操作系统处理FPU提供的，意思就是在中断异常发生的时候，浮点寄存器不入栈，这里的浮点寄存器指的是S0 ~ S15，FPSCR这几个浮点寄存器，但是会在相关的栈里面保留等长的内存空间，FPCAR自动指向保存相关的浮点栈的地址，注意这个寄存器不会因为栈切换而修改地址，它是硬件自动赋值的。直到操作系统进行了S16 ~ S31的入栈处理，在S16 ~ S31的入栈处理发生前，硬件自动将S0 ~ S15入栈。</p>
+<p>接下来解释一下怎么利用lazy stacking 机制设计上下文调度函数。</p>
+<p>如果对linux kernel的lazy mode有了解的话，可以理解为是一种精简版的lazy mode。rtos和linux kernel在逻辑上的相同之处是在上下文切换的时候都关闭FPU，等到执行浮点数操作的时候，让它触发异常，然后在异常里面处理FPU。</p>
+<p>不同的地方在于硬件上，linux kernel一般跑完整的arm v7或V8（V8我不确定）芯片，FPU未启用时操作浮点数会触发未定义指令异常，然后在未定义指令异常检测FPU，切换到svc，然后再处理FPU的启动。RTOS一般跑在cortex M系列芯片上，这类芯片没有完整的异常模式，FPU未启用的时候触发的是hardfault handle（优先级很高），设计rtos的时候，一般在这里开始对FPU功能的处理。</p>
+<p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/lazy-stacking0.PNG" alt="image7"><br>image7<br>图中显示，在每次的上下文调度中，关闭FPU，直到有了浮点数操作的时候，触发了hardfault exception，在硬件错误异常里面，检测FPU状态，如果是FPU需要启用，给FPU启用标志置位，挂起PendSV，在PendSV才处理FPU的启用和浮点寄存器的上下文切换，然后在下一次任务调度的时候又关闭了FPU。这里不解释PendSV，不然文章太长了。</p>
+<p>在hardfault检测是否为FPU异常触发hardfault，检测无协处理器的NOCP位，如果等于1，表明触发了操作浮点数异常。<br>这时候需要<br>1、清除NOCP位；<br>2、使能FPU；<br>3、挂起PendSV；<br>如果不是FPU触发的异常，我印象中的异常还有，野指针、MSP栈溢出、除零等，其他的暂时没想起来。操作系统都要处理这些异常的，但是不在本文说明，超纲了。</p>
+<p>ARM提供lazy stacking这个机制原因是希望减少中断等待和上下文切换时间。linux的内存分配机制，也在用户真的往请求的内存里面写东西的时候，触发了page fault之后才进行分配内存，这也是lazy机制的一种。</p>
+<p>总结一下,如何在os种实现lazy stacking机制：<br>1、每次进行上下文切换的时候，将fpu关闭；<br>2、在hardfult中检测错误原因，如果是浮点数操作触发中断异常，挂起PendSV，在PendSV中存储以及恢复上下文的浮点寄存器，保护以及恢复现场；<br>3、在PendSV中使能fpu；<br>4、不建议在pendsv、hardfult中使用浮点数操作。</p>
+<h5 id="多任务，且中断中使用浮点寄存器"><a href="#多任务，且中断中使用浮点寄存器" class="headerlink" title="多任务，且中断中使用浮点寄存器"></a>多任务，且中断中使用浮点寄存器</h5><p>先回答，能不能在中断使用浮点数，答案是可以的，只是不建议，因为在进入ISR时用户需要自己存储S16 ~ S31的浮点寄存器，然后在退出ISR的时候，需要手动恢复S16 ~ S31的浮点寄存器和LR[4]，关闭FPU等等，其实就是按照AAPCS的要求，保护浮点寄存器的现场，这和使用RTOS的初衷是相悖的，这不仅没有简化编程工作，还增加了难度。</p>
+<h2 id="FPU使用实践"><a href="#FPU使用实践" class="headerlink" title="FPU使用实践"></a>FPU使用实践</h2><p>本文只提供操作系统环境下的在中断中使用浮点运算的实践，并且开启了lazy stacking。</p>
+<h3 id="FPU实践使用的环境"><a href="#FPU实践使用的环境" class="headerlink" title="FPU实践使用的环境"></a>FPU实践使用的环境</h3><ul>
+<li>debian 9</li>
+<li>emacs26.1</li>
+<li>qemu （stm32f429 discovery）</li>
+<li>stm32f407（硬件板子）</li>
+<li>oops-rtos</li>
+</ul>
+<p>bilibili……另起文章来介绍吧-_-</p>
+<p>写于深圳12月的某个想睡觉的凌晨</p>
+<p>本文参考文献（参考文献按照相关性从高到低排序）：<br>1、Cortex-M4(F) Lazy Stacking and Context Switching application note 298<br>2、Cortex-M4 Technical Reference Manual Revision r0p1<br>3、Cortex™-M3 Technical Reference Manual Revision r1p1<br>4、ARM®v7-M Architecture Reference Manual<br>5、（AAPCS32）Procedure Call Standard for the ARM Architecture ABI r2.10<br>6、ARM® Architecture Reference Manual ARMv7-A and ARMv7-R edition</p>
 
       
 
@@ -220,6 +271,17 @@
         </div>
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">ARM</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
 
       
@@ -270,7 +332,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/11/09/%E7%AE%80%E4%BB%8B/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -284,15 +346,20 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2019/11/25/oops-rtos-release-V1-0-0/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          oops-rtos的实现
+          oops-rtos release V1.0.0
         
       </div>
     </a>
   
+  
+    <a href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">使能ARM Cortex M4的FPU</div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 
@@ -317,7 +384,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    目录，不存在的…
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#FPU相关的寄存器"><span class="toc-number">1.</span> <span class="toc-text">FPU相关的寄存器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AAPCS"><span class="toc-number">2.</span> <span class="toc-text">AAPCS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NVIC"><span class="toc-number">3.</span> <span class="toc-text">NVIC</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FPU的使用场景"><span class="toc-number"></span> <span class="toc-text">FPU的使用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#没有操作系统的情况"><span class="toc-number">1.</span> <span class="toc-text">没有操作系统的情况</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#无浮点寄存器操作"><span class="toc-number">1.1.</span> <span class="toc-text">无浮点寄存器操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#被中断的源码有浮点寄存器操作"><span class="toc-number">1.2.</span> <span class="toc-text">被中断的源码有浮点寄存器操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#中断和main（）函数均有浮点数操作"><span class="toc-number">1.3.</span> <span class="toc-text">中断和main（）函数均有浮点数操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#中断（嵌套）和main（）函数均有浮点数操作"><span class="toc-number">1.4.</span> <span class="toc-text">中断（嵌套）和main（）函数均有浮点数操作</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#有操作系统的情况"><span class="toc-number">2.</span> <span class="toc-text">有操作系统的情况</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#方式1"><span class="toc-number">2.1.</span> <span class="toc-text">方式1</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#方式2"><span class="toc-number">2.2.</span> <span class="toc-text">方式2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#方式3"><span class="toc-number">2.3.</span> <span class="toc-text">方式3</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#lazy-stacking"><span class="toc-number">2.3.1.</span> <span class="toc-text">lazy stacking</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#多任务，且中断中使用浮点寄存器"><span class="toc-number">2.3.2.</span> <span class="toc-text">多任务，且中断中使用浮点寄存器</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FPU使用实践"><span class="toc-number"></span> <span class="toc-text">FPU使用实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#FPU实践使用的环境"><span class="toc-number">1.</span> <span class="toc-text">FPU实践使用的环境</span></a></li></ol>
                     </div>
                 </span>
             </div>
@@ -331,7 +398,7 @@
   
   <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="简介" data-title="简介" data-url="http://yoursite.com/2019/11/09/%E7%AE%80%E4%BB%8B/"></div>
+	<div class="ds-thread" data-thread-key="ARM-cotrex-M4-FPU-lazy-stacking" data-title="ARM cotrex M4 FPU（lazy stacking）" data-url="http://yoursite.com/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
