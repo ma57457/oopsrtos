@@ -23,7 +23,7 @@
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;no-os-no-fpu-op-isr-nest.PNG">
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;single-task-fpu.PNG">
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;lazy-stacking0.PNG">
-<meta property="og:updated_time" content="2019-12-20T01:40:33.939Z">
+<meta property="og:updated_time" content="2019-12-20T01:50:59.168Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;11&#x2F;20&#x2F;ARM-cotrex-M4-FPU-lazy-stacking&#x2F;fpu_stack_push.PNG">
   
@@ -211,7 +211,7 @@
 <p>如果对linux kernel的lazy mode有了解的话，可以理解为是一种精简版的lazy mode。rtos和linux kernel在逻辑上的相同之处是在上下文切换的时候都关闭FPU，等到执行浮点数操作的时候，让它触发异常，然后在异常里面处理FPU。</p>
 <p>不同的地方在于硬件上，linux kernel一般跑完整的arm v7或V8（V8我不确定）芯片，FPU未启用时操作浮点数会触发未定义指令异常，然后在未定义指令异常检测FPU，切换到svc，然后再处理FPU的启动。RTOS一般跑在cortex M系列芯片上，这类芯片没有完整的异常模式，FPU未启用的时候触发的是hardfault handle（优先级很高），设计rtos的时候，一般在这里开始对FPU功能的处理。</p>
 <p><img src="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/lazy-stacking0.PNG" alt="image7"><br>image7<br>图中显示，在每次的上下文调度中，关闭FPU，直到有了浮点数操作的时候，触发了hardfault exception，在硬件错误异常里面，检测FPU状态，如果是FPU需要启用，给FPU启用标志置位，挂起PendSV，在PendSV才处理FPU的启用和浮点寄存器的上下文切换，然后在下一次任务调度的时候又关闭了FPU。这里不解释PendSV，不然文章太长了。</p>
-<p>在hardfault检测是否为FPU异常触发hardfault，检测无协处理器的NOCP位，如果等于1，表明触发了操作浮点数异常。<br>这时候需要<br>1、清除NOCP位；<br>2、使能FPU；<br>3、挂起PendSV；<br>如果不是FPU触发的异常，我印象中的异常还有，野指针、MSP栈溢出、除零等，其他的暂时没想起来。操作系统都要处理这些异常的，但是不在本文说明，超纲了。</p>
+<p>在hardfault检测是否为FPU异常触发hardfault，检测无协处理器的NOCP位，如果等于1，表明触发了操作浮点数异常。<br>这时候需要<br>1、清除NOCP位；<br>2、挂起PendSV；<br>3、使能FPU；<br>如果不是FPU触发的异常，我印象中的异常还有，野指针、MSP栈溢出、除零等，其他的暂时没想起来。操作系统都要处理这些异常的，但是不在本文说明，超纲了。</p>
 <p>ARM提供lazy stacking这个机制原因是希望减少中断等待和上下文切换时间。linux的内存分配机制，也在用户真的往请求的内存里面写东西的时候，触发了page fault之后才进行分配内存，这也是lazy机制的一种。</p>
 <p>总结一下,如何在os种实现lazy stacking机制：<br>1、每次进行上下文切换的时候，将fpu关闭；<br>2、在hardfult中检测错误原因，如果是浮点数操作触发中断异常，挂起PendSV，在PendSV中存储以及恢复上下文的浮点寄存器，保护以及恢复现场；<br>3、在PendSV中使能fpu；<br>4、不建议在pendsv、hardfult中使用浮点数操作。</p>
 <h5 id="多任务，且中断中使用浮点寄存器"><a href="#多任务，且中断中使用浮点寄存器" class="headerlink" title="多任务，且中断中使用浮点寄存器"></a>多任务，且中断中使用浮点寄存器</h5><p>先回答，能不能在中断使用浮点数，答案是可以的，只是不建议，因为在进入ISR时用户需要自己存储S16 ~ S31的浮点寄存器，然后在退出ISR的时候，需要手动恢复S16 ~ S31的浮点寄存器和LR[4]，关闭FPU等等，其实就是按照AAPCS的要求，保护浮点寄存器的现场，这和使用RTOS的初衷是相悖的，这不仅没有简化编程工作，还增加了难度。</p>
