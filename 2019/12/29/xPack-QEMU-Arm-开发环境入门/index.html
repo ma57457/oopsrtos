@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="Oopsrtos">
 <meta property="og:description" content="先说说QEMU是什么，QEMU是一个开源的多平台仿真器。它主要是提供了一个仿真框架，使开发者可以不必将二进制文件导入到芯片的存储模块中，即可实现部分硬件功能的仿真，其实部分KVM环境里面的cpu就是qemu模拟出来的。然后谈谈xPack QEMU是什么。QEMU是一个比较大的工程，它主要的仿真板都是比较大的内核，主要是可以跑linux kernel的那种芯片，它对Cortex M的支持其实是有限的">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2019-12-29T12:12:54.750Z">
+<meta property="og:updated_time" content="2019-12-30T00:42:38.749Z">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
@@ -173,24 +173,31 @@
     <div class="article-entry" itemprop="articleBody">
       
       <p>先说说QEMU是什么，QEMU是一个开源的多平台仿真器。它主要是提供了一个仿真框架，使开发者可以不必将二进制文件导入到芯片的存储模块中，即可实现部分硬件功能的仿真，其实部分KVM环境里面的cpu就是qemu模拟出来的。<br>然后谈谈xPack QEMU是什么。QEMU是一个比较大的工程，它主要的仿真板都是比较大的内核，主要是可以跑linux kernel的那种芯片，它对Cortex M的支持其实是有限的。xPack QEMU是QEMU的一个分支，它是基于QEMU做出来的。截止到2019.12.29，xPack仍然没有支持cortex m4的FPU（最新的QEMU已经支持了），NVIC仍然有问题。支持有限归有限，如果想在CI里面进行单元测试，或者硬件仿真的话，QEMU仍是当前的低成本选择。</p>
+<a id="more"></a>
 <p>然后xPack QEMU支持芯片列表如下：<br>STM32F103RB<br>STM32F107VC<br>STM32F405RG<br>STM32F407VG<br>STM32F407ZG<br>STM32F429ZI<br>STM32L152RE</p>
 <p>支持的开发板如下：<br>Maple – LeafLab Arduino-style STM32 microcontroller board<br>NUCLEO-F103RB – ST Nucleo Development Board for STM32 F1 series<br>NetduinoGo – Netduino GoBus Development Board with STM32F4<br>NetduinoPlus2 – Netduino Development Board with STM32F4<br>STM32-E407 – Olimex Development Board for STM32F407ZGT6<br>STM32-H103 – Olimex Header Board for STM32F103RBT6<br>STM32-P103 – Olimex Prototype Board for STM32F103RBT6<br>STM32-P107 – Olimex Prototype Board for STM32F107VCT6<br>STM32F4-Discovery – ST Discovery kit for STM32F407/417 lines<br>STM32F429I-Discovery – ST Discovery kit for STM32F429/439 lines</p>
 <p>官网提到了xPack QEMU的局限性：<br>1、不支持Cortex M4的FPU<br>2、NVIC的实现基于更大内核的GIC，不准确。看到这里的时候在调试OOPS的上下文调度器的时候需要特别注意。</p>
 <p>开发环境：<br>debian 10<br>notejs<br>xpm<br>eclipse</p>
-<p>第一步，安装notejs,这里推荐使用PPA安装,直接用apt装的话，软件版本不是最新的<br>参考链接 <a href="https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-debian-10">https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-debian-10</a><br>···<br>$ cd ~<br>$ curl -sL <a href="https://deb.nodesource.com/setup_12.x">https://deb.nodesource.com/setup_12.x</a> -o nodesource_setup.sh<br>$ sudo bash nodesource_setup.sh<br>$ sudo apt install nodejs<br>$ node -v</p>
-<p>Output<br>v12.14.0</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第二步，安装xpm</span><br><span class="line">参考链接 https://xpack.github.io/xpm/install/</span><br><span class="line">···</span><br><span class="line">$ npm install --global xpm@latest</span><br><span class="line">$ xpm --version</span><br><span class="line">output</span><br><span class="line">$ 0.5.0</span><br><span class="line">···</span><br><span class="line"></span><br><span class="line">第三步，安装xPack</span><br><span class="line">参考链接：https://xpack.github.io/qemu-arm/install/</span><br></pre></td></tr></table></figure>
-<p>$ xpm install –global @xpack-dev-tools/qemu-arm@latest</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第四步，安装工具链</span><br><span class="line">参考链接：https://gnu-mcu-eclipse.github.io/install/</span><br></pre></td></tr></table></figure>
-<p>$ xpm install –global @xpack-dev-tools/arm-none-eabi-gcc@latest</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第五步，安装OPENOCD</span><br><span class="line">参考链接和第四步一样</span><br></pre></td></tr></table></figure>
-<p>$ xpm install –global @xpack-dev-tools/openocd@latest</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第六步，安装JAVA</span><br><span class="line">参考链接同上</span><br></pre></td></tr></table></figure>
-<p>$ sudo apt install wget libasound2 libasound2-data<br>$ wget –no-cookies –no-check-certificate –header “Cookie: oraclelicense=accept-securebackup-cookie” <a href="https://download.oracle.com/otn-pub/java/jdk/13.0.1+9/cec27d702aa74d5a8630c65ae61e4305/jdk-13.0.1_linux-x64_bin.deb">https://download.oracle.com/otn-pub/java/jdk/13.0.1+9/cec27d702aa74d5a8630c65ae61e4305/jdk-13.0.1_linux-x64_bin.deb</a><br>$ dpkg -i jdk-13.0.1_linux-x64_bin.deb<br>$ update-alternatives –install /usr/bin/java java  /usr/lib/jvm/jdk-13.0.1/bin/java 2<br>$ update-alternatives –config java</p>
-<pre><code>
-java 也可以到这个网站直接下载，https://www.oracle.com/technetwork/java/javase/downloads/jdk13-downloads-5672538.html
-下载完成用dpkg -i 安装即可
-</code></pre>
+<p>第一步，安装notejs,这里推荐使用PPA安装,直接用apt装的话，软件版本不是最新的<br>参考链接 <a href="https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-debian-10">https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-debian-10</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ cd ~</span><br><span class="line">$ curl -sL https://deb.nodesource.com/setup_12.x -o nodesource_setup.sh</span><br><span class="line">$ sudo bash nodesource_setup.sh</span><br><span class="line">$ sudo apt install nodejs</span><br><span class="line">$ node -v</span><br><span class="line"></span><br><span class="line">Output</span><br><span class="line">v12.14.0</span><br></pre></td></tr></table></figure>
+
+<p>第二步，安装xpm<br>参考链接 <a href="https://xpack.github.io/xpm/install/">https://xpack.github.io/xpm/install/</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ npm install --global xpm@latest</span><br><span class="line">$ xpm --version</span><br><span class="line">output</span><br><span class="line">$ 0.5.0</span><br></pre></td></tr></table></figure>
+
+<p>第三步，安装xPack<br>参考链接：<a href="https://xpack.github.io/qemu-arm/install/">https://xpack.github.io/qemu-arm/install/</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ xpm install --global @xpack-dev-tools/qemu-arm@latest</span><br></pre></td></tr></table></figure>
+
+<p>第四步，安装工具链<br>参考链接：<a href="https://gnu-mcu-eclipse.github.io/install/">https://gnu-mcu-eclipse.github.io/install/</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ xpm install --global @xpack-dev-tools/arm-none-eabi-gcc@latest</span><br></pre></td></tr></table></figure>
+
+<p>第五步，安装OPENOCD<br>参考链接和第四步一样</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ xpm install --global @xpack-dev-tools/openocd@latest</span><br></pre></td></tr></table></figure>
+
+<p>第六步，安装JAVA<br>参考链接同上</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt install wget libasound2 libasound2-data</span><br><span class="line">$ wget --no-cookies --no-check-certificate --header &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; https://download.oracle.com/otn-pub/java/jdk/13.0.1+9/cec27d702aa74d5a8630c65ae61e4305/jdk-13.0.1_linux-x64_bin.deb</span><br><span class="line">$ dpkg -i jdk-13.0.1_linux-x64_bin.deb</span><br><span class="line">$ update-alternatives --install /usr/bin/java java  /usr/lib/jvm/jdk-13.0.1/bin/java 2</span><br><span class="line">$ update-alternatives --config java</span><br></pre></td></tr></table></figure>
+
+<p>java 也可以到这个网站直接下载，<a href="https://www.oracle.com/technetwork/java/javase/downloads/jdk13-downloads-5672538.html">https://www.oracle.com/technetwork/java/javase/downloads/jdk13-downloads-5672538.html</a><br>下载完成用dpkg -i 安装即可</p>
+
       
 
       
