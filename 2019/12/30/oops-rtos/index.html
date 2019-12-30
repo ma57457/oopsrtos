@@ -6,15 +6,16 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives | Oopsrtos</title>
+  <title>oops-rtos | Oopsrtos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="这是一个很小的用于教学的OS">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Oopsrtos">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;archives&#x2F;page&#x2F;2&#x2F;index.html">
+  <meta name="description" content="本文是关于oops-rtos的介绍，oops-rtos是一个简易版本的实时操作系统内核，第一版的内核不到1000行代码。内核很小，只是基本实现了操作系统的基本功能。其他的类似于网络系统、shell、文件系统之类的得另外添加开源模块。由于oops-rtos是一个很小的操作系统，它目前的定位是教学系统，是用于给读者学习操作系统的内部逻辑以及实现的，本书会详细的将一个完整操作系统的实现一点一滴的给读者剖">
+<meta property="og:type" content="article">
+<meta property="og:title" content="oops-rtos">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;30&#x2F;oops-rtos&#x2F;index.html">
 <meta property="og:site_name" content="Oopsrtos">
-<meta property="og:description" content="这是一个很小的用于教学的OS">
+<meta property="og:description" content="本文是关于oops-rtos的介绍，oops-rtos是一个简易版本的实时操作系统内核，第一版的内核不到1000行代码。内核很小，只是基本实现了操作系统的基本功能。其他的类似于网络系统、shell、文件系统之类的得另外添加开源模块。由于oops-rtos是一个很小的操作系统，它目前的定位是教学系统，是用于给读者学习操作系统的内部逻辑以及实现的，本书会详细的将一个完整操作系统的实现一点一滴的给读者剖">
 <meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-12-30T16:21:51.048Z">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
@@ -151,128 +152,221 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-oops-rtos" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      oops-rtos
+    </h1>
+  
+
+        
+        <a href="/2019/12/30/oops-rtos/" class="archive-article-date">
+  	<time datetime="2019-12-30T12:24:10.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-30</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+      <p>本文是关于oops-rtos的介绍，oops-rtos是一个简易版本的实时操作系统内核，第一版的内核不到1000行代码。内核很小，只是基本实现了操作系统的基本功能。其他的类似于网络系统、shell、文件系统之类的得另外添加开源模块。<br>由于oops-rtos是一个很小的操作系统，它目前的定位是教学系统，是用于给读者学习操作系统的内部逻辑以及实现的，本书会详细的将一个完整操作系统的实现一点一滴的给读者剖析。让操作系统开发不神秘，人人都可以开发操作系统。</p>
+<a id="more"></a>
+<h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p>1、操作系统与裸机开发的区别<br>2、内核态与用户态<br>3、什么是过程调度规范<br>7、栈和堆<br>4、arm v7 m的运行模式<br>5、如何创建任务<br>6、任务的不同运行状态<br>9、任务的优先级<br>10、优先级反转<br>11、空闲任务的作用<br>12、延时函数的实现<br>13、原子操作<br>14、锁<br>15、临界状态<br>16、中断管理<br>17、如何搭建oops-rtos开发环境</p>
+<h2 id="1、操作系统与裸机开发的区别"><a href="#1、操作系统与裸机开发的区别" class="headerlink" title="1、操作系统与裸机开发的区别"></a>1、操作系统与裸机开发的区别</h2><p>操作系统与裸机开发的区别主要在于需要考虑数据的保护，多任务时候数据需要考虑并发的时候可能会被其他任务篡改，这种数据一般要考虑加锁。而加锁需要考虑锁的粒度，粒度大了影响性能，粒度小了可能数据保护不完全。驱动编写的时候还得考虑临界态，可能任务运行一会又被打断，导致驱动功能失效，调试起来又找不到原因……<br>在操作系统里开发嵌入式应用虽然比裸机开发需要考虑的事情比较多，但是实际上只要习惯了，就能享受带操作系统开发的好处。<br>1、延时函数不会让cpu空转；<br>2、外设驱动的响应要快于裸机；（补图）<br>3、多任务的时候，并发任务带来更好的用户体验；（补图）</p>
+<h2 id="2、内核态与用户态的区别"><a href="#2、内核态与用户态的区别" class="headerlink" title="2、内核态与用户态的区别"></a>2、内核态与用户态的区别</h2><p>裸机开发的时候基本没有内核态与用户态的想法，到了操作系统的时候仍然没有这种想法的话，可能会导致应用和内核的耦合过高，导致代码可读性以及移植性不好。<br>那么现在聊聊什么是内核态：内核态就是操作系统内实现其基本功能的函数，类似于任务调度算法、内存管理、底层外设驱动、定时函数等都是内核需要完成的事情。<br>什么是用户态：用户态就是用户自行实现的功能性代码，和开发者的业务息息相关的代码，一般处于task里面的代码。</p>
+<p>这里需要解释一件事情，用户撰写的部分代码其实是可以归于内核态的，比如中断函数、高精度的定时器、自行撰写的内存管理算法等；这一类的代码属于内核态，因为这些代码均可以剥离出来不归于业务。如何剥离业务代码，将业务代码合并到操作系统这个会在其他地方解释，这里不解释。</p>
+<h2 id="3、什么是过程调度规范"><a href="#3、什么是过程调度规范" class="headerlink" title="3、什么是过程调度规范"></a>3、什么是过程调度规范</h2><p>oops-rtos暂时支持的是arm v7-m的内核，不支持其他架构，所以我们以AAPCS32为例解释。<br>芯片启动的时候，运行的第一行代码，都是汇编代码，在进入c语言环境之前，汇编代码需要准备c语言的运行环境，c语言的运行环境是指栈空间，随便打开一份arm的bin文件，它的第一个字就是这份代码的栈基地址，在汇编的启动函数里面需要将这个地址放置到SP指针处，然后才能修改pc地址，跳转到c函数，但是不是main()函数取决于启动代码的跳转地址，有些rtos（zephyr）启动函数里面并不是跳转到main()里面，而是跳转到系统初始化函数中。<br>（贴图，aapcs的栈序列）</p>
+<p>如上图，这是AAPCS32的规范，每一个task的栈都需要符合这个规范，否则不能使用AAPCS32标准的编译器。我们可以看看代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">这里放置task 初始化代码</span><br></pre></td></tr></table></figure>
+
+<h2 id="4、arm-v7-m的运行模式"><a href="#4、arm-v7-m的运行模式" class="headerlink" title="4、arm v7-m的运行模式"></a>4、arm v7-m的运行模式</h2><p>运行模式：运行模式指的是arm的芯片在运行过程中所处于的状态，不同的模式有不同的权限，部分特殊功能寄存器只能在某一个模式中才能读写，否则可能会触发硬件异常。</p>
+<h2 id="5、任务创建"><a href="#5、任务创建" class="headerlink" title="5、任务创建"></a>5、任务创建</h2><h2 id="6、任务态"><a href="#6、任务态" class="headerlink" title="6、任务态"></a>6、任务态</h2><p>（配图）<br>任务态指的是任务当前处于什么运行状态，一般而言，任务态分为：运行态、就绪态、阻塞态、挂起态、休眠态等几种状态。<br>正在运行的任务处于运行态；就绪态指得是任务处于随时可以运行的状态，调度器一般从就绪态列表里面获取优先级最高的任务运行；阻塞态：阻塞态是是指任务当前不满足运行条件，被阻塞的原因一般是锁、调用延时函数等；挂起态：任务可以主动挂起自身，也可以挂起其他任务，被挂起后的任务不能在调度器中被唤起运行，只能等待其他任务重新唤醒；休眠态：休眠的任务类似于阻塞态，但是处于休眠态的任务消耗的资源更低，处于休眠态的任务的资源（外设时钟）可以在空闲任务中关闭以获得低功耗，重新唤起休眠态任务可以使用锁或者其他任务提供信号量。</p>
+<h2 id="6、栈和堆"><a href="#6、栈和堆" class="headerlink" title="6、栈和堆"></a>6、栈和堆</h2><p>这里聊聊栈和堆之间的关系，oops-rtos设计的时候，任务栈和内核栈是分离的，实际上，任务栈使用的是堆的空间，内核栈使用的是主栈空间，即启动代码里面初始化的栈空间。</p>
+<p>栈分离的做法利用了arm v7-m提供的msp和ssp机制，msp是芯片reset态后默认使用的栈寄存器，任务使用的栈寄存器是ssp这个需要在上下文调度函数里面主动切换。</p>
+<h2 id="7、任务的优先级"><a href="#7、任务的优先级" class="headerlink" title="7、任务的优先级"></a>7、任务的优先级</h2><p>每一个任务创建之初都有自己的优先级，最低优先级是空闲函数，所有的任务都处于阻塞态的时候，运行空闲任务，空闲任务可以被所有任务打断。</p>
+<h2 id="8、优先级反转"><a href="#8、优先级反转" class="headerlink" title="8、优先级反转"></a>8、优先级反转</h2><p>优先级反转是一个很有意思的事情，高优先级的任务由于需要获得低优先级任务的锁，而低优先级任务正在处理任务，不会出让锁，导致高优先级任务需要等待低优先级任务解锁后才能运行。这种现象称为优先级反转，优先级反转不能消除，除非任务间不存在优先级，所有任务级别一致。<br>（这里需要提供三个图，一个是没有优先级的操作系统；一个是低优先级任务持有锁，高优先级等待低优先级锁释放锁；一个是低优先级持有锁，高优先级等待低优先级释放锁，但是低优先级被多个任务打断了，打断低优先级的任务优先级低于等待的高优先级任务的优先级，好绕啊）<br>优先级反转的缺陷在于，高优先级的任务需要等待低优先级任务出让锁后才能运行，如果低优先级任务在高优先级等待期间没有被其他任务打断，仍然在运行自身的软件，那么优先级反转不需要解决，但是事实上是，低优先级任务有可能在持有锁器件被其他高于它的任务打断，但是打断低优先级的任务优先级低于被阻塞的高优先级任务，当打断的任务越多，优先级反转的问题越严重，因为高优先级任务一直得不到运行条件。<br>（这里需要画一个图，解释优先级继承）<br>解决这种优先级反转的一种办法是，优先级继承，即使当持有锁的任务被高优先级任务打断，在上下文调度器里面探测被打断的任务的优先级是否低于打断该任务的优先级，如果是，临时将持有锁的低优先级任务的优先级提升到等于高优先级任务的优先级，等到低优先级任务释放锁后，将任务优先级恢复到原有的优先级。这样，优先级反转的问题就被缓解了，问题仍然存在，仅仅是缓解。</p>
+<h2 id="9、空闲任务"><a href="#9、空闲任务" class="headerlink" title="9、空闲任务"></a>9、空闲任务</h2><p>空闲任务是指操作系统没有就绪任务可调度的时候调用的函数，空闲任务优先级最低，它可以被任何其他任务打断，空闲任务还可以提供cpu使用率，低功耗处理等功能。</p>
+<h2 id="10、延时函数"><a href="#10、延时函数" class="headerlink" title="10、延时函数"></a>10、延时函数</h2><p>延时函数是指由操作系统提供的精确度一般的函数，它可以实现简单延时，但是它的延时精度一般为0<del>一个系统时间片，oops的系统时间片默认为1ms，就是说系统延时函数的精度为0</del>1ms。延时函数的实现就是在系统定时器里为处于延时阻塞的任务延时递增，当任务的延时时间满足了，任务会从阻塞态切换到就绪态。但是什么时候执行，得看任务什么时候获得运行条件，理论上延时误差可以为0~正无穷。</p>
+<h2 id="13、原子操作"><a href="#13、原子操作" class="headerlink" title="13、原子操作"></a>13、原子操作</h2><p>原子操作指得是变量的赋值或者运算是不会被打断的，当变量执行完赋值或者运算后才能被打断才能称之为原子操作，注意volatile无法发实现原子操作。<br>谈到原子操作需要解释一下程序的执行流程，程序执行分为取指，译码，执行（三级流水线，arm v7-m），（这里参考oops-rtos的文章“Atomic操作解释”）<br>实际上cortex m3基本上不用考虑内存屏障，它只有在NVIC操作中断、CPSI 操作I位时候才需要考虑内存屏障的事情。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">    MOV r1, #0x1                ; load the ‘lock taken’ value</span><br><span class="line">try</span><br><span class="line">    LDREX r0, [LockAddr]        ; load the lock value</span><br><span class="line">    CMP r0, #0                  ; is the lock free?</span><br><span class="line">    STREXEQ r0, r1, [LockAddr]  ; try and claim the lock</span><br><span class="line">    CMPEQ r0, #0                ; did this succeed?</span><br><span class="line">    BNE try                     ; no – try again</span><br><span class="line">    ....                        ; yes – we have the lock</span><br></pre></td></tr></table></figure>
+
+<h2 id="14、锁"><a href="#14、锁" class="headerlink" title="14、锁"></a>14、锁</h2><p>锁的实现基于原子操作，在原子操作的基础上，利用不同的数据结构实现不同的锁。锁分为互斥锁，信号量等。更高级锁还有自旋锁，读者锁，写者锁等，锁的实现依赖于调度器的处理，调度器处理阻塞态的任务时候需要给任务检测是否符合解除阻塞的条件，如果符合，需要将任务从阻塞态中移动到就绪态中，这部分的处理类似于延时阻塞的处理。</p>
+<h2 id="15、临界状态"><a href="#15、临界状态" class="headerlink" title="15、临界状态"></a>15、临界状态</h2><p>任务运行过程中，可能需要有一个短暂临界状态，这个状态不能被打断，不能被调度，必须等待某个信号的反馈之后才能继续后续的操作，一般出现在某些芯片的特定时序需求，必须按照指定的时序完成操作才能将其初始化或者使能。临界态最简单的进入方法就是关cpu总中断响应，在单核芯片中，关闭cpu中断响应，cpu就不会再次进入到任务调度函数中，也不会被中断打断。但是设计临界态的代码必须非常简短，否则影响调度器的性能。</p>
+<h2 id="16、中断管理"><a href="#16、中断管理" class="headerlink" title="16、中断管理"></a>16、中断管理</h2><p>cortex m系列的中断控制器都是被精简过的，它称为NVIC。</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="/images/ali-pay.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="/images/weixin-pay.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
+      
+
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/" class="archive-article-date">
-  	<time datetime="2019-11-18T00:09:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-18</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/">使能ARM Cortex M4的FPU</a>
-    </h1>
-  
+      </div>
+    </span>
+  </div>
+</div>
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">ARM OS</a>
-        		</li>
-      		
-		</ul>
-	</div>
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/12/30/oops-rtos/" alt="微信分享二维码">
+    </div>
+</div>
 
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/ARM//" class="article-tag-list-link color4">ARM</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="archive-article-date">
-  	<time datetime="2019-11-09T09:23:24.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-09</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2019/12/29/xPack-QEMU-Arm-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E5%85%A5%E9%97%A8/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">xPack QEMU Arm 开发环境入门</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/09/oops-rtos%E7%9A%84%E5%AE%9E%E7%8E%B0/">oops-rtos的实现</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#目录"><span class="toc-number">1.</span> <span class="toc-text">目录</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1、操作系统与裸机开发的区别"><span class="toc-number"></span> <span class="toc-text">1、操作系统与裸机开发的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2、内核态与用户态的区别"><span class="toc-number"></span> <span class="toc-text">2、内核态与用户态的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3、什么是过程调度规范"><span class="toc-number"></span> <span class="toc-text">3、什么是过程调度规范</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4、arm-v7-m的运行模式"><span class="toc-number"></span> <span class="toc-text">4、arm v7-m的运行模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5、任务创建"><span class="toc-number"></span> <span class="toc-text">5、任务创建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6、任务态"><span class="toc-number"></span> <span class="toc-text">6、任务态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6、栈和堆"><span class="toc-number"></span> <span class="toc-text">6、栈和堆</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7、任务的优先级"><span class="toc-number"></span> <span class="toc-text">7、任务的优先级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8、优先级反转"><span class="toc-number"></span> <span class="toc-text">8、优先级反转</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9、空闲任务"><span class="toc-number"></span> <span class="toc-text">9、空闲任务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#10、延时函数"><span class="toc-number"></span> <span class="toc-text">10、延时函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#13、原子操作"><span class="toc-number"></span> <span class="toc-text">13、原子操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#14、锁"><span class="toc-number"></span> <span class="toc-text">14、锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#15、临界状态"><span class="toc-number"></span> <span class="toc-text">15、临界状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#16、中断管理"><span class="toc-number"></span> <span class="toc-text">16、中断管理</span></a>
+                    </div>
+                </span>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
+        
+    </div>
+</aside>
+
+
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/09/%E7%AE%80%E4%BB%8B/" class="archive-article-date">
-  	<time datetime="2019-11-09T06:16:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-09</time>
-</a>
-        </div>
-    	 
+  <div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="oops-rtos" data-title="oops-rtos" data-url="http://yoursite.com/2019/12/30/oops-rtos/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/09/%E7%AE%80%E4%BB%8B/">简介</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/">&amp;laquo; Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span>
-    </nav>
+  
+
   
 
 
@@ -296,8 +390,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
