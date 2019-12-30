@@ -6,15 +6,16 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives | Oopsrtos</title>
+  <title>xPack QEMU Arm 开发环境入门 | Oopsrtos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="这是一个很小的用于教学的OS">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Oopsrtos">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;archives&#x2F;index.html">
+  <meta name="description" content="先说说QEMU是什么，QEMU是一个开源的多平台仿真器。它主要是提供了一个仿真框架，使开发者可以不必将二进制文件导入到芯片的存储模块中，即可实现部分硬件功能的仿真，其实部分KVM环境里面的cpu就是qemu模拟出来的。然后谈谈xPack QEMU是什么。QEMU是一个比较大的工程，它主要的仿真板都是比较大的内核，主要是可以跑linux kernel的那种芯片，它对Cortex M的支持其实是有限的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xPack QEMU Arm 开发环境入门">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;12&#x2F;29&#x2F;xPack-QEMU-Arm-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E5%85%A5%E9%97%A8&#x2F;index.html">
 <meta property="og:site_name" content="Oopsrtos">
-<meta property="og:description" content="这是一个很小的用于教学的OS">
+<meta property="og:description" content="先说说QEMU是什么，QEMU是一个开源的多平台仿真器。它主要是提供了一个仿真框架，使开发者可以不必将二进制文件导入到芯片的存储模块中，即可实现部分硬件功能的仿真，其实部分KVM环境里面的cpu就是qemu模拟出来的。然后谈谈xPack QEMU是什么。QEMU是一个比较大的工程，它主要的仿真板都是比较大的内核，主要是可以跑linux kernel的那种芯片，它对Cortex M的支持其实是有限的">
 <meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-12-29T12:12:54.750Z">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Oopsrtos" type="application/atom+xml">
@@ -151,328 +152,215 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
+            <article id="post-xPack-QEMU-Arm-开发环境入门" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
   
+    <h1 class="article-title" itemprop="name">
+      xPack QEMU Arm 开发环境入门
+    </h1>
   
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/12/29/xPack-QEMU-Arm-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E5%85%A5%E9%97%A8/" class="archive-article-date">
+
+        
+        <a href="/2019/12/29/xPack-QEMU-Arm-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E5%85%A5%E9%97%A8/" class="archive-article-date">
   	<time datetime="2019-12-29T08:56:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-29</time>
 </a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/12/29/xPack-QEMU-Arm-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E5%85%A5%E9%97%A8/">xPack QEMU Arm 开发环境入门</a>
-    </h1>
-  
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      <p>先说说QEMU是什么，QEMU是一个开源的多平台仿真器。它主要是提供了一个仿真框架，使开发者可以不必将二进制文件导入到芯片的存储模块中，即可实现部分硬件功能的仿真，其实部分KVM环境里面的cpu就是qemu模拟出来的。<br>然后谈谈xPack QEMU是什么。QEMU是一个比较大的工程，它主要的仿真板都是比较大的内核，主要是可以跑linux kernel的那种芯片，它对Cortex M的支持其实是有限的。xPack QEMU是QEMU的一个分支，它是基于QEMU做出来的。截止到2019.12.29，xPack仍然没有支持cortex m4的FPU（最新的QEMU已经支持了），NVIC仍然有问题。支持有限归有限，如果想在CI里面进行单元测试，或者硬件仿真的话，QEMU仍是当前的低成本选择。</p>
+<p>然后xPack QEMU支持芯片列表如下：<br>STM32F103RB<br>STM32F107VC<br>STM32F405RG<br>STM32F407VG<br>STM32F407ZG<br>STM32F429ZI<br>STM32L152RE</p>
+<p>支持的开发板如下：<br>Maple – LeafLab Arduino-style STM32 microcontroller board<br>NUCLEO-F103RB – ST Nucleo Development Board for STM32 F1 series<br>NetduinoGo – Netduino GoBus Development Board with STM32F4<br>NetduinoPlus2 – Netduino Development Board with STM32F4<br>STM32-E407 – Olimex Development Board for STM32F407ZGT6<br>STM32-H103 – Olimex Header Board for STM32F103RBT6<br>STM32-P103 – Olimex Prototype Board for STM32F103RBT6<br>STM32-P107 – Olimex Prototype Board for STM32F107VCT6<br>STM32F4-Discovery – ST Discovery kit for STM32F407/417 lines<br>STM32F429I-Discovery – ST Discovery kit for STM32F429/439 lines</p>
+<p>官网提到了xPack QEMU的局限性：<br>1、不支持Cortex M4的FPU<br>2、NVIC的实现基于更大内核的GIC，不准确。看到这里的时候在调试OOPS的上下文调度器的时候需要特别注意。</p>
+<p>开发环境：<br>debian 10<br>notejs<br>xpm<br>eclipse</p>
+<p>第一步，安装notejs,这里推荐使用PPA安装,直接用apt装的话，软件版本不是最新的<br>参考链接 <a href="https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-debian-10">https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-debian-10</a><br>···<br>$ cd ~<br>$ curl -sL <a href="https://deb.nodesource.com/setup_12.x">https://deb.nodesource.com/setup_12.x</a> -o nodesource_setup.sh<br>$ sudo bash nodesource_setup.sh<br>$ sudo apt install nodejs<br>$ node -v</p>
+<p>Output<br>v12.14.0</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第二步，安装xpm</span><br><span class="line">参考链接 https://xpack.github.io/xpm/install/</span><br><span class="line">···</span><br><span class="line">$ npm install --global xpm@latest</span><br><span class="line">$ xpm --version</span><br><span class="line">output</span><br><span class="line">$ 0.5.0</span><br><span class="line">···</span><br><span class="line"></span><br><span class="line">第三步，安装xPack</span><br><span class="line">参考链接：https://xpack.github.io/qemu-arm/install/</span><br></pre></td></tr></table></figure>
+<p>$ xpm install –global @xpack-dev-tools/qemu-arm@latest</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第四步，安装工具链</span><br><span class="line">参考链接：https://gnu-mcu-eclipse.github.io/install/</span><br></pre></td></tr></table></figure>
+<p>$ xpm install –global @xpack-dev-tools/arm-none-eabi-gcc@latest</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第五步，安装OPENOCD</span><br><span class="line">参考链接和第四步一样</span><br></pre></td></tr></table></figure>
+<p>$ xpm install –global @xpack-dev-tools/openocd@latest</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第六步，安装JAVA</span><br><span class="line">参考链接同上</span><br></pre></td></tr></table></figure>
+<p>$ sudo apt install wget libasound2 libasound2-data<br>$ wget –no-cookies –no-check-certificate –header “Cookie: oraclelicense=accept-securebackup-cookie” <a href="https://download.oracle.com/otn-pub/java/jdk/13.0.1+9/cec27d702aa74d5a8630c65ae61e4305/jdk-13.0.1_linux-x64_bin.deb">https://download.oracle.com/otn-pub/java/jdk/13.0.1+9/cec27d702aa74d5a8630c65ae61e4305/jdk-13.0.1_linux-x64_bin.deb</a><br>$ dpkg -i jdk-13.0.1_linux-x64_bin.deb<br>$ update-alternatives –install /usr/bin/java java  /usr/lib/jvm/jdk-13.0.1/bin/java 2<br>$ update-alternatives –config java</p>
+<pre><code>
+java 也可以到这个网站直接下载，https://www.oracle.com/technetwork/java/javase/downloads/jdk13-downloads-5672538.html
+下载完成用dpkg -i 安装即可
+</code></pre>
+      
 
-        <div class="article-info info-on-right">
-          
-          
-
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="/images/ali-pay.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="/images/weixin-pay.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/12/29/xPack-QEMU-Arm-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E5%85%A5%E9%97%A8/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/12/03/oopsrtos-linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" class="archive-article-date">
-  	<time datetime="2019-12-03T00:01:46.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-12-03</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2019/12/03/oopsrtos-linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">oopsrtos linux 开发环境搭建</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/12/03/oopsrtos-linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">oopsrtos linux 开发环境搭建</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    目录，不存在的…
+                    </div>
+                </span>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/" class="archive-article-date">
-  	<time datetime="2019-11-26T04:13:17.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/zephyr-%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/">zephyr 系统启动分析（一）</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/%E6%88%91%E8%BF%99%E5%A4%A7%E5%AD%A6%E5%9B%9B%E5%B9%B4/" class="archive-article-date">
-  	<time datetime="2019-11-26T04:11:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/%E6%88%91%E8%BF%99%E5%A4%A7%E5%AD%A6%E5%9B%9B%E5%B9%B4/">我这大学四年</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/%E3%80%8A%E8%8F%8A%E4%B8%8E%E5%88%80%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/" class="archive-article-date">
-  	<time datetime="2019-11-26T04:09:02.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/%E3%80%8A%E8%8F%8A%E4%B8%8E%E5%88%80%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/">《菊与刀》读后感</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/%E3%80%8A%E8%81%8A%E8%81%8A%E6%9E%B6%E6%9E%84%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/" class="archive-article-date">
-  	<time datetime="2019-11-26T03:58:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/%E3%80%8A%E8%81%8A%E8%81%8A%E6%9E%B6%E6%9E%84%E3%80%8B%E8%AF%BB%E5%90%8E%E6%84%9F/">《聊聊架构》读后感</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/" class="archive-article-date">
-  	<time datetime="2019-11-26T03:29:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-26</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/26/Atomic-%E6%93%8D%E4%BD%9C%E8%A7%A3%E9%87%8A/">Atomic 操作解释</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/25/oops-rtos-release-V1-0-0/" class="archive-article-date">
-  	<time datetime="2019-11-24T23:55:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-25</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/25/oops-rtos-release-V1-0-0/">oops-rtos release V1.0.0</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/" class="archive-article-date">
-  	<time datetime="2019-11-20T04:01:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-20</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/20/ARM-cotrex-M4-FPU-lazy-stacking/">ARM cotrex M4 FPU（lazy stacking）</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">ARM</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/" class="archive-article-date">
-  	<time datetime="2019-11-18T00:09:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-18</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/11/18/%E4%BD%BF%E8%83%BDARM-Cortex-M4%E7%9A%84FPU/">使能ARM Cortex M4的FPU</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">ARM OS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/ARM//" class="article-tag-list-link color4">ARM</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
+
+  
+  <div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="xPack-QEMU-Arm-开发环境入门" data-title="xPack QEMU Arm 开发环境入门" data-url="http://yoursite.com/2019/12/29/xPack-QEMU-Arm-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E5%85%A5%E9%97%A8/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="extend next" rel="next" href="/archives/page/2/">Next &amp;raquo;</a>
-    </nav>
+  
+
+  
+
   
 
 
@@ -496,8 +384,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
